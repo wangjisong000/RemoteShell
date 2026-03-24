@@ -1,0 +1,16 @@
+[project]
+name = "remote-shell"
+version = "1.0.0"
+description = "Web-based terminal emulator using WebSocket"
+requires-python = ">=3.8"
+dependencies = [
+    "websockets>=10.0",
+    "winpty>=0.5",
+]
+
+[project.scripts]
+remote-shell = "web_terminal:main"
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
