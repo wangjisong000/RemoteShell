@@ -20,7 +20,23 @@ PASSWORD = os.environ.get("RS_PASS", "admin123456")
 HTTP_PORT = int(os.environ.get("RS_HTTP_PORT", "5010"))
 WS_PORT = int(os.environ.get("RS_WS_PORT", "5011"))
 ACCESS_TOKEN = os.environ.get("RS_ACCESS_TOKEN", "remote_shell_2026")
-SECRET_KEY = os.environ.get("RS_SECRET_KEY", secrets.token_hex(32))
+
+_SELF_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def _load_secret_key():
+    env_key = os.environ.get("RS_SECRET_KEY")
+    if env_key:
+        return env_key
+    key_file = os.path.join(_SELF_DIR, '.secret_key')
+    if os.path.exists(key_file):
+        with open(key_file, 'r') as f:
+            return f.read().strip()
+    key = secrets.token_hex(32)
+    with open(key_file, 'w') as f:
+        f.write(key)
+    return key
+
+SECRET_KEY = _load_secret_key()
 TOKEN_EXPIRE = 86400  # token 有效期 24 小时
 LOGIN_MAX_ATTEMPTS = 5
 LOGIN_WINDOW = 600  # 10 分钟内
@@ -30,6 +46,31 @@ sessions = {}         # token -> {'ts': float}
 pty_sessions = {}     # pty_id -> PTY dict (全局, 单用户场景)
 pty_lock = threading.Lock()
 login_attempts = {}   # ip -> (count, first_attempt_time)
+
+# sessions 持久化
+SESSIONS_FILE = os.path.join(_SELF_DIR, '.sessions.json')
+
+def _save_sessions():
+    try:
+        tmp = SESSIONS_FILE + '.tmp'
+        with open(tmp, 'w') as f:
+            json.dump(sessions, f)
+        os.replace(tmp, SESSIONS_FILE)
+    except Exception:
+        pass
+
+def _load_sessions():
+    if os.path.exists(SESSIONS_FILE):
+        try:
+            with open(SESSIONS_FILE, 'r') as f:
+                data = json.load(f)
+            now = time.time()
+            return {t: s for t, s in data.items() if now - s['ts'] < TOKEN_EXPIRE}
+        except Exception:
+            pass
+    return {}
+
+sessions = _load_sessions()
 
 HTML = r"""<!DOCTYPE html>
 <html>
@@ -125,8 +166,9 @@ HTML = r"""<!DOCTYPE html>
         .status-bar {
             display: none;
             background: #1a1a1a;
-            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
             padding: 4px 10px;
+            padding-top: calc(4px + env(safe-area-inset-top, 0px));
             font-size: 11px;
             color: #888;
             justify-content: space-between;
@@ -546,11 +588,23 @@ HTML = r"""<!DOCTYPE html>
             term.open(document.getElementById('terminal-container'));
             setTimeout(() => fitAddon.fit(), 50);
 
+            let composing = false;
+
             term.onData(data => {
-                if (socket && socket.readyState === WebSocket.OPEN) {
+                if (socket && socket.readyState === WebSocket.OPEN && !composing) {
                     socket.send(data);
                 }
             });
+
+            // 在 xterm.js 自己的 textarea 上监听 IME, 比 document 级别更可靠
+            const textarea = term.textarea;
+            if (textarea) {
+                textarea.addEventListener('compositionstart', () => { composing = true; });
+                textarea.addEventListener('compositionend', () => { composing = false; });
+            }
+            // 兜底: 某些浏览器 composition 事件可能不冒泡到 textarea 监听器
+            document.addEventListener('compositionstart', () => { composing = true; });
+            document.addEventListener('compositionend', () => { composing = false; });
 
             // resize 事件
             let resizeTimer;
@@ -668,6 +722,7 @@ def login():
     if data.get('username') == USERNAME and data.get('password') == PASSWORD:
         token = secrets.token_hex(16)
         sessions[token] = {'ts': now}
+        _save_sessions()
         return jsonify({'success': True, 'token': token})
     else:
         count, first = login_attempts[ip]
@@ -864,7 +919,9 @@ async def ws_handler(ws):
                 env = os.environ.copy()
                 env["TERM"] = "xterm-256color"
                 logging.info(f"Spawning cmd.exe for pty {pty_id}")
-                proc = PtyProcess.spawn('cmd.exe', env=env, dimensions=(rows, cols))
+                proc = PtyProcess.spawn(
+                    ['python', os.path.join(_SELF_DIR, '_pty_boot.py')],
+                    env=env, dimensions=(rows, cols))
                 pty['proc'] = proc
                 pty['cols'] = cols
                 pty['rows'] = rows
@@ -940,6 +997,7 @@ def cleanup_sessions():
                             pass
                     pty_sessions.pop(pid, None)
             sessions.pop(t, None)
+            _save_sessions()
 
 
 def start_ws_server():

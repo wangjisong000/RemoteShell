@@ -1,3 +1,5 @@
 back/*
 .playwright-mcp/*
 .claude/settings.local.json
+.secret_key
+.sessions.json
