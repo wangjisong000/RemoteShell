@@ -1,0 +1,1106 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Skip to content" [ref=e4] [cursor=pointer]:
+      - /url: "#start-of-content"
+    - banner [ref=e6]:
+      - heading "Navigation Menu" [level=2] [ref=e7]
+      - generic [ref=e8]:
+        - link "Homepage" [ref=e10] [cursor=pointer]:
+          - /url: /
+          - img [ref=e11]
+        - generic [ref=e13]:
+          - navigation "Global" [ref=e16]:
+            - list [ref=e17]:
+              - listitem [ref=e18]:
+                - button "Platform" [ref=e20] [cursor=pointer]:
+                  - text: Platform
+                  - img [ref=e21]
+              - listitem [ref=e23]:
+                - button "Solutions" [ref=e25] [cursor=pointer]:
+                  - text: Solutions
+                  - img [ref=e26]
+              - listitem [ref=e28]:
+                - button "Resources" [ref=e30] [cursor=pointer]:
+                  - text: Resources
+                  - img [ref=e31]
+              - listitem [ref=e33]:
+                - button "Open Source" [ref=e35] [cursor=pointer]:
+                  - text: Open Source
+                  - img [ref=e36]
+              - listitem [ref=e38]:
+                - button "Enterprise" [ref=e40] [cursor=pointer]:
+                  - text: Enterprise
+                  - img [ref=e41]
+              - listitem [ref=e43]:
+                - link "Pricing" [ref=e44] [cursor=pointer]:
+                  - /url: https://github.com/pricing
+                  - generic [ref=e45]: Pricing
+          - generic [ref=e46]:
+            - button "Search or jump to…" [ref=e49] [cursor=pointer]:
+              - img [ref=e51]
+              - generic [ref=e53]: Search or jump to...
+              - img [ref=e55]
+            - link "Sign in" [ref=e59] [cursor=pointer]:
+              - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Fduxweb%2Fcodux
+            - link "Sign up" [ref=e60] [cursor=pointer]:
+              - /url: /signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F%3Cuser-name%3E%2F%3Crepo-name%3E&source=header-repo&source_repo=duxweb%2Fcodux
+            - button "Appearance settings" [ref=e63] [cursor=pointer]:
+              - img
+  - main [ref=e67]:
+    - generic [ref=e68]:
+      - generic [ref=e69]:
+        - generic [ref=e71]:
+          - img [ref=e72]
+          - link "duxweb" [ref=e75] [cursor=pointer]:
+            - /url: /duxweb
+          - generic [ref=e76]: /
+          - strong [ref=e77]:
+            - link "codux" [ref=e78] [cursor=pointer]:
+              - /url: /duxweb/codux
+          - generic [ref=e79]: Public
+        - generic [ref=e80]:
+          - list:
+            - listitem [ref=e81]:
+              - link "You must be signed in to change notification settings" [ref=e82] [cursor=pointer]:
+                - /url: /login?return_to=%2Fduxweb%2Fcodux
+                - img [ref=e83]
+                - text: Notifications
+            - listitem [ref=e85]:
+              - link "Fork 12" [ref=e86] [cursor=pointer]:
+                - /url: /login?return_to=%2Fduxweb%2Fcodux
+                - img [ref=e87]
+                - text: Fork
+                - generic "12" [ref=e89]
+            - listitem [ref=e90]:
+              - link "You must be signed in to star a repository" [ref=e92] [cursor=pointer]:
+                - /url: /login?return_to=%2Fduxweb%2Fcodux
+                - img [ref=e93]
+                - text: Star
+                - generic "109 users starred this repository" [ref=e95]: "109"
+      - navigation "Repository" [ref=e96]:
+        - list [ref=e97]:
+          - listitem [ref=e98]:
+            - link "Code" [ref=e99] [cursor=pointer]:
+              - /url: /duxweb/codux
+              - img [ref=e100]
+              - generic [ref=e102]: Code
+          - listitem [ref=e103]:
+            - link "Issues 1" [ref=e104] [cursor=pointer]:
+              - /url: /duxweb/codux/issues
+              - img [ref=e105]
+              - generic [ref=e108]: Issues
+              - generic "1" [ref=e109]
+          - listitem [ref=e110]:
+            - link "Pull requests" [ref=e111] [cursor=pointer]:
+              - /url: /duxweb/codux/pulls
+              - img [ref=e112]
+              - generic [ref=e114]: Pull requests
+          - listitem [ref=e115]:
+            - link "Actions" [ref=e116] [cursor=pointer]:
+              - /url: /duxweb/codux/actions
+              - img [ref=e117]
+              - generic [ref=e119]: Actions
+          - listitem [ref=e120]:
+            - link "Projects" [ref=e121] [cursor=pointer]:
+              - /url: /duxweb/codux/projects
+              - img [ref=e122]
+              - generic [ref=e124]: Projects
+          - listitem [ref=e125]:
+            - link "Security and quality" [ref=e126] [cursor=pointer]:
+              - /url: /duxweb/codux/security
+              - img [ref=e127]
+              - generic [ref=e129]: Security and quality
+          - listitem [ref=e130]:
+            - link "Insights" [ref=e131] [cursor=pointer]:
+              - /url: /duxweb/codux/pulse
+              - img [ref=e132]
+              - generic [ref=e134]: Insights
+    - generic [ref=e147]:
+      - heading "duxweb/codux" [level=1] [ref=e149]
+      - generic [ref=e150]:
+        - generic [ref=e153]:
+          - generic [ref=e154]:
+            - generic [ref=e155]:
+              - button "main branch" [ref=e157] [cursor=pointer]:
+                - generic [ref=e158]:
+                  - generic [ref=e160]:
+                    - img [ref=e162]
+                    - generic [ref=e165]: main
+                  - generic:
+                    - img
+              - generic [ref=e166]:
+                - link "8 Branches" [ref=e167] [cursor=pointer]:
+                  - /url: /duxweb/codux/branches
+                  - generic [ref=e168]:
+                    - generic:
+                      - img
+                    - generic [ref=e170]:
+                      - strong [ref=e171]: "8"
+                      - text: Branches
+                - link "94 Tags" [ref=e172] [cursor=pointer]:
+                  - /url: /duxweb/codux/tags
+                  - generic [ref=e173]:
+                    - generic:
+                      - img
+                    - generic [ref=e175]:
+                      - strong [ref=e176]: "94"
+                      - text: Tags
+            - generic [ref=e177]:
+              - generic [ref=e181]:
+                - img [ref=e183]
+                - combobox "Go to file" [ref=e185]
+              - button "Code" [ref=e186] [cursor=pointer]:
+                - generic [ref=e187]:
+                  - generic:
+                    - img
+                  - generic [ref=e188]: Code
+                  - generic:
+                    - img
+          - generic [ref=e189]:
+            - generic [ref=e190]:
+              - heading "Folders and files" [level=2] [ref=e191]
+              - table "Folders and files" [ref=e192]:
+                - rowgroup:
+                  - row "Name Last commit message Last commit date":
+                    - columnheader "Name"
+                    - columnheader "Last commit message":
+                      - generic "Last commit message"
+                    - columnheader "Last commit date":
+                      - generic "Last commit date"
+                - rowgroup [ref=e193]:
+                  - 'row "Latest commit dux-web claude commits by dux-web and commits by claude docs(readme): brew cask for desktop + curl one-liner for the headless… Open commit details Commit 70a168b · Jun 26, 20266 hours ago History 682 Commits" [ref=e194]':
+                    - 'cell "Latest commit dux-web claude commits by dux-web and commits by claude docs(readme): brew cask for desktop + curl one-liner for the headless… Open commit details Commit 70a168b · Jun 26, 20266 hours ago History 682 Commits" [ref=e195]':
+                      - generic [ref=e196]:
+                        - heading "Latest commit" [level=2] [ref=e197]
+                        - generic [ref=e198]:
+                          - generic [ref=e199]:
+                            - generic [ref=e201]:
+                              - img "dux-web" [ref=e202]
+                              - img "claude" [ref=e203]
+                            - link "commits by dux-web" [ref=e205] [cursor=pointer]:
+                              - /url: /duxweb/codux/commits?author=dux-web
+                              - text: dux-web
+                            - generic [ref=e206]: and
+                            - link "commits by claude" [ref=e208] [cursor=pointer]:
+                              - /url: /duxweb/codux/commits?author=claude
+                              - text: claude
+                          - generic [ref=e209]:
+                            - 'link "docs(readme): brew cask for desktop + curl one-liner for the headless…" [ref=e212] [cursor=pointer]':
+                              - /url: /duxweb/codux/commit/70a168bd2a9bcc4454e2a61fbeca19ed7631cc9a
+                            - button "Open commit details" [ref=e213] [cursor=pointer]:
+                              - img [ref=e214]
+                        - generic [ref=e216]:
+                          - generic [ref=e218]:
+                            - link "Commit 70a168b" [ref=e219] [cursor=pointer]:
+                              - /url: /duxweb/codux/commit/70a168bd2a9bcc4454e2a61fbeca19ed7631cc9a
+                              - text: 70a168b
+                            - text: ·
+                            - generic "Jun 26, 2026, 10:54 GMT+8" [ref=e220]: Jun 26, 20266 hours ago
+                          - generic [ref=e221]:
+                            - heading "History" [level=2] [ref=e222]
+                            - link "682 Commits" [ref=e223] [cursor=pointer]:
+                              - /url: /duxweb/codux/commits/main/
+                              - generic [ref=e224]:
+                                - generic:
+                                  - img
+                                - generic [ref=e225]: 682 Commits
+                  - 'row ".cargo, (Directory) feat(app): align gpui runtime shell and optimize project switching May 31, 2026last month" [ref=e226]':
+                    - cell ".cargo, (Directory)" [ref=e227]:
+                      - generic [ref=e228]:
+                        - img [ref=e229]
+                        - link ".cargo, (Directory)" [ref=e234] [cursor=pointer]:
+                          - /url: /duxweb/codux/tree/main/.cargo
+                          - text: .cargo
+                    - 'cell "feat(app): align gpui runtime shell and optimize project switching" [ref=e235]':
+                      - 'link "feat(app): align gpui runtime shell and optimize project switching" [ref=e238] [cursor=pointer]':
+                        - /url: /duxweb/codux/commit/b79b314f309c31ebc8e0c370bf954ebf023545c0
+                    - cell "May 31, 2026last month" [ref=e239]:
+                      - generic [ref=e240]: May 31, 2026last month
+                  - row ".github/workflows, (Directory) Add agent release workflow Jun 20, 2026last week" [ref=e241]:
+                    - cell ".github/workflows, (Directory)" [ref=e242]:
+                      - generic [ref=e243]:
+                        - img [ref=e244]
+                        - link ".github/workflows, (Directory)" [ref=e249] [cursor=pointer]:
+                          - /url: /duxweb/codux/tree/main/.github/workflows
+                          - text: .github/workflows
+                    - cell "Add agent release workflow" [ref=e250]:
+                      - link "Add agent release workflow" [ref=e253] [cursor=pointer]:
+                        - /url: /duxweb/codux/commit/1254f9e5d1cd3cd52af9b2631622999482d81671
+                    - cell "Jun 20, 2026last week" [ref=e254]:
+                      - generic [ref=e255]: Jun 20, 2026last week
+                  - 'row "apps, (Directory) feat(agent): add uninstall + download-mirror to the install script Jun 26, 20267 hours ago" [ref=e256]':
+                    - cell "apps, (Directory)" [ref=e257]:
+                      - generic [ref=e258]:
+                        - img [ref=e259]
+                        - link "apps, (Directory)" [ref=e264] [cursor=pointer]:
+                          - /url: /duxweb/codux/tree/main/apps
+                          - text: apps
+                    - 'cell "feat(agent): add uninstall + download-mirror to the install script" [ref=e265]':
+                      - 'link "feat(agent): add uninstall + download-mirror to the install script" [ref=e268] [cursor=pointer]':
+                        - /url: /duxweb/codux/commit/f254e88458a9401439a8e74be6bd6e74aba18639
+                    - cell "Jun 26, 20267 hours ago" [ref=e269]:
+                      - generic [ref=e270]: Jun 26, 20267 hours ago
+                  - 'row "crates, (Directory) feat(desktop): right-click stage/unstage/discard/ignore on git sideba… Jun 25, 2026yesterday" [ref=e271]':
+                    - cell "crates, (Directory)" [ref=e272]:
+                      - generic [ref=e273]:
+                        - img [ref=e274]
+                        - link "crates, (Directory)" [ref=e279] [cursor=pointer]:
+                          - /url: /duxweb/codux/tree/main/crates
+                          - text: crates
+                    - 'cell "feat(desktop): right-click stage/unstage/discard/ignore on git sideba…" [ref=e280]':
+                      - 'link "feat(desktop): right-click stage/unstage/discard/ignore on git sideba…" [ref=e283] [cursor=pointer]':
+                        - /url: /duxweb/codux/commit/f5c3eb0b02e5e68a2daf019b3e439b3127bce52b
+                    - cell "Jun 25, 2026yesterday" [ref=e284]:
+                      - generic [ref=e285]: Jun 25, 2026yesterday
+                  - 'row "docs/images, (Directory) docs: refine readme messaging Jun 20, 2026last week" [ref=e286]':
+                    - cell "docs/images, (Directory)" [ref=e287]:
+                      - generic [ref=e288]:
+                        - img [ref=e289]
+                        - link "docs/images, (Directory)" [ref=e294] [cursor=pointer]:
+                          - /url: /duxweb/codux/tree/main/docs/images
+                          - text: docs/images
+                    - 'cell "docs: refine readme messaging" [ref=e295]':
+                      - 'link "docs: refine readme messaging" [ref=e298] [cursor=pointer]':
+                        - /url: /duxweb/codux/commit/f8a26e7ef8a21a57c92e7062480718a4ae067b46
+                    - cell "Jun 20, 2026last week" [ref=e299]:
+                      - generic [ref=e300]: Jun 20, 2026last week
+                  - row "tools, (Directory) Strip Zig/ghostty leftovers from the build and CI Jun 18, 2026last week" [ref=e301]:
+                    - cell "tools, (Directory)" [ref=e302]:
+                      - generic [ref=e303]:
+                        - img [ref=e304]
+                        - link "tools, (Directory)" [ref=e309] [cursor=pointer]:
+                          - /url: /duxweb/codux/tree/main/tools
+                          - text: tools
+                    - cell "Strip Zig/ghostty leftovers from the build and CI" [ref=e310]:
+                      - link "Strip Zig/ghostty leftovers from the build and CI" [ref=e313] [cursor=pointer]:
+                        - /url: /duxweb/codux/commit/14d36e8b1cf56e20b30e61b47b90d3fb0bdbd263
+                    - cell "Jun 18, 2026last week" [ref=e314]:
+                      - generic [ref=e315]: Jun 18, 2026last week
+                  - 'row "updates, (Directory) chore: update beta updater manifest for 2.0.0-beta.3 Jun 25, 2026yesterday" [ref=e316]':
+                    - cell "updates, (Directory)" [ref=e317]:
+                      - generic [ref=e318]:
+                        - img [ref=e319]
+                        - link "updates, (Directory)" [ref=e324] [cursor=pointer]:
+                          - /url: /duxweb/codux/tree/main/updates
+                          - text: updates
+                    - 'cell "chore: update beta updater manifest for 2.0.0-beta.3" [ref=e325]':
+                      - 'link "chore: update beta updater manifest for 2.0.0-beta.3" [ref=e328] [cursor=pointer]':
+                        - /url: /duxweb/codux/commit/30364baafe505eea3e772d597c30f6b5e11fa8f4
+                    - cell "Jun 25, 2026yesterday" [ref=e329]:
+                      - generic [ref=e330]: Jun 25, 2026yesterday
+                  - row ".gitignore, (File) chore move desktop app into monorepo apps Jun 9, 20262 weeks ago" [ref=e331]:
+                    - cell ".gitignore, (File)" [ref=e332]:
+                      - generic [ref=e333]:
+                        - img [ref=e334]
+                        - link ".gitignore, (File)" [ref=e339] [cursor=pointer]:
+                          - /url: /duxweb/codux/blob/main/.gitignore
+                          - text: .gitignore
+                    - cell "chore move desktop app into monorepo apps" [ref=e340]:
+                      - link "chore move desktop app into monorepo apps" [ref=e343] [cursor=pointer]:
+                        - /url: /duxweb/codux/commit/afe64f4446b4c9b4ee2292cb4b35162c14fb8b37
+                    - cell "Jun 9, 20262 weeks ago" [ref=e344]:
+                      - generic [ref=e345]: Jun 9, 20262 weeks ago
+                  - 'row "CHANGELOG.md, (File) docs: changelog for 2.0.0-beta.3 (en + zh-CN); bump mobile to 2.0.0-b… Jun 25, 2026yesterday" [ref=e346]':
+                    - cell "CHANGELOG.md, (File)" [ref=e347]:
+                      - generic [ref=e348]:
+                        - img [ref=e349]
+                        - link "CHANGELOG.md, (File)" [ref=e354] [cursor=pointer]:
+                          - /url: /duxweb/codux/blob/main/CHANGELOG.md
+                          - text: CHANGELOG.md
+                    - 'cell "docs: changelog for 2.0.0-beta.3 (en + zh-CN); bump mobile to 2.0.0-b…" [ref=e355]':
+                      - 'link "docs: changelog for 2.0.0-beta.3 (en + zh-CN); bump mobile to 2.0.0-b…" [ref=e358] [cursor=pointer]':
+                        - /url: /duxweb/codux/commit/f247f1c14e2de0d13b14589f287e9f867af3ea5f
+                    - cell "Jun 25, 2026yesterday" [ref=e359]:
+                      - generic [ref=e360]: Jun 25, 2026yesterday
+                  - 'row "CHANGELOG.zh-CN.md, (File) docs: changelog for 2.0.0-beta.3 (en + zh-CN); bump mobile to 2.0.0-b… Jun 25, 2026yesterday" [ref=e361]':
+                    - cell "CHANGELOG.zh-CN.md, (File)" [ref=e362]:
+                      - generic [ref=e363]:
+                        - img [ref=e364]
+                        - link "CHANGELOG.zh-CN.md, (File)" [ref=e369] [cursor=pointer]:
+                          - /url: /duxweb/codux/blob/main/CHANGELOG.zh-CN.md
+                          - text: CHANGELOG.zh-CN.md
+                    - 'cell "docs: changelog for 2.0.0-beta.3 (en + zh-CN); bump mobile to 2.0.0-b…" [ref=e370]':
+                      - 'link "docs: changelog for 2.0.0-beta.3 (en + zh-CN); bump mobile to 2.0.0-b…" [ref=e373] [cursor=pointer]':
+                        - /url: /duxweb/codux/commit/f247f1c14e2de0d13b14589f287e9f867af3ea5f
+                    - cell "Jun 25, 2026yesterday" [ref=e374]:
+                      - generic [ref=e375]: Jun 25, 2026yesterday
+                  - 'row "Cargo.lock, (File) feat(remote): direct LAN connections via iroh mDNS address lookup Jun 24, 20262 days ago" [ref=e376]':
+                    - cell "Cargo.lock, (File)" [ref=e377]:
+                      - generic [ref=e378]:
+                        - img [ref=e379]
+                        - link "Cargo.lock, (File)" [ref=e384] [cursor=pointer]:
+                          - /url: /duxweb/codux/blob/main/Cargo.lock
+                          - text: Cargo.lock
+                    - 'cell "feat(remote): direct LAN connections via iroh mDNS address lookup" [ref=e385]':
+                      - 'link "feat(remote): direct LAN connections via iroh mDNS address lookup" [ref=e388] [cursor=pointer]':
+                        - /url: /duxweb/codux/commit/adf3235db6e627d4317934d70579868e477d4674
+                    - cell "Jun 24, 20262 days ago" [ref=e389]:
+                      - generic [ref=e390]: Jun 24, 20262 days ago
+                  - 'row "Cargo.toml, (File) feat(desktop): GitHub-star nudge, roomier menus, frosted polish Jun 22, 20264 days ago" [ref=e391]':
+                    - cell "Cargo.toml, (File)" [ref=e392]:
+                      - generic [ref=e393]:
+                        - img [ref=e394]
+                        - link "Cargo.toml, (File)" [ref=e399] [cursor=pointer]:
+                          - /url: /duxweb/codux/blob/main/Cargo.toml
+                          - text: Cargo.toml
+                    - 'cell "feat(desktop): GitHub-star nudge, roomier menus, frosted polish" [ref=e400]':
+                      - 'link "feat(desktop): GitHub-star nudge, roomier menus, frosted polish" [ref=e403] [cursor=pointer]':
+                        - /url: /duxweb/codux/commit/caea79891e0e62e951c8509d375143071298ff8c
+                    - cell "Jun 22, 20264 days ago" [ref=e404]:
+                      - generic [ref=e405]: Jun 22, 20264 days ago
+                  - 'row "README.md, (File) docs(readme): brew cask for desktop + curl one-liner for the headless… Jun 26, 20266 hours ago" [ref=e406]':
+                    - cell "README.md, (File)" [ref=e407]:
+                      - generic [ref=e408]:
+                        - img [ref=e409]
+                        - link "README.md, (File)" [ref=e414] [cursor=pointer]:
+                          - /url: /duxweb/codux/blob/main/README.md
+                          - text: README.md
+                    - 'cell "docs(readme): brew cask for desktop + curl one-liner for the headless…" [ref=e415]':
+                      - 'link "docs(readme): brew cask for desktop + curl one-liner for the headless…" [ref=e418] [cursor=pointer]':
+                        - /url: /duxweb/codux/commit/70a168bd2a9bcc4454e2a61fbeca19ed7631cc9a
+                    - cell "Jun 26, 20266 hours ago" [ref=e419]:
+                      - generic [ref=e420]: Jun 26, 20266 hours ago
+                  - 'row "README.zh-CN.md, (File) docs(readme): brew cask for desktop + curl one-liner for the headless… Jun 26, 20266 hours ago" [ref=e421]':
+                    - cell "README.zh-CN.md, (File)" [ref=e422]:
+                      - generic [ref=e423]:
+                        - img [ref=e424]
+                        - link "README.zh-CN.md, (File)" [ref=e429] [cursor=pointer]:
+                          - /url: /duxweb/codux/blob/main/README.zh-CN.md
+                          - text: README.zh-CN.md
+                    - 'cell "docs(readme): brew cask for desktop + curl one-liner for the headless…" [ref=e430]':
+                      - 'link "docs(readme): brew cask for desktop + curl one-liner for the headless…" [ref=e433] [cursor=pointer]':
+                        - /url: /duxweb/codux/commit/70a168bd2a9bcc4454e2a61fbeca19ed7631cc9a
+                    - cell "Jun 26, 20266 hours ago" [ref=e434]:
+                      - generic [ref=e435]: Jun 26, 20266 hours ago
+                  - 'row "justfile, (File) agent: turn codux-agent into a cross-platform codux CLI (clap) Jun 20, 2026last week" [ref=e436]':
+                    - cell "justfile, (File)" [ref=e437]:
+                      - generic [ref=e438]:
+                        - img [ref=e439]
+                        - link "justfile, (File)" [ref=e444] [cursor=pointer]:
+                          - /url: /duxweb/codux/blob/main/justfile
+                          - text: justfile
+                    - 'cell "agent: turn codux-agent into a cross-platform codux CLI (clap)" [ref=e445]':
+                      - 'link "agent: turn codux-agent into a cross-platform codux CLI (clap)" [ref=e448] [cursor=pointer]':
+                        - /url: /duxweb/codux/commit/b129e5148509addeda8b37cd047fb8a5233be862
+                        - text: "agent: turn codux-agent into a cross-platform"
+                        - code [ref=e449]: codux
+                        - text: CLI (clap)
+                    - cell "Jun 20, 2026last week" [ref=e450]:
+                      - generic [ref=e451]: Jun 20, 2026last week
+            - generic [ref=e453]:
+              - generic [ref=e454]:
+                - heading "Repository files navigation" [level=2] [ref=e455]
+                - navigation "Repository files" [ref=e456]:
+                  - list [ref=e457]:
+                    - listitem [ref=e458]:
+                      - link "README" [ref=e459] [cursor=pointer]:
+                        - /url: "#"
+                        - img [ref=e461]
+                        - generic [ref=e463]: README
+                - button "Outline" [ref=e464] [cursor=pointer]:
+                  - img [ref=e465]
+              - article [ref=e468]:
+                - paragraph [ref=e469]:
+                  - link "Codux" [ref=e470] [cursor=pointer]:
+                    - /url: /duxweb/codux/blob/main/docs/images/icon.png
+                    - img "Codux" [ref=e471]
+                - generic [ref=e472]:
+                  - heading "Codux Terminal" [level=1] [ref=e473]
+                  - 'link "Permalink: Codux Terminal" [ref=e474] [cursor=pointer]':
+                    - /url: "#codux-terminal"
+                    - img [ref=e475]
+                - paragraph [ref=e477]:
+                  - text: The high-performance, cross-device terminal built for AI coding
+                  - text: Built with Rust + GPUI, Codux unifies Codex, Claude Code, and 6+ AI coding CLIs with live status, token analytics, local memory, secure SSH, and a desktop ⇄ phone ⇄ headless-host link for taking over long-running agent work from anywhere.
+                - paragraph [ref=e478]:
+                  - link "Website" [ref=e479] [cursor=pointer]:
+                    - /url: https://codux.dux.cn
+                  - text: ·
+                  - link "Docs" [ref=e480] [cursor=pointer]:
+                    - /url: https://codux.dux.cn/zh-cn/getting-started/
+                  - text: ·
+                  - link "Download" [ref=e481] [cursor=pointer]:
+                    - /url: https://github.com/duxweb/codux/releases/latest
+                  - text: ·
+                  - link "Mobile" [ref=e482] [cursor=pointer]:
+                    - /url: https://github.com/duxweb/codux-flutter/releases
+                  - text: ·
+                  - link "Contact" [ref=e483] [cursor=pointer]:
+                    - /url: "#contact--support"
+                  - text: ·
+                  - link "Feedback" [ref=e484] [cursor=pointer]:
+                    - /url: https://github.com/duxweb/codux/issues
+                - paragraph [ref=e485]:
+                  - text: English |
+                  - link "简体中文" [ref=e486] [cursor=pointer]:
+                    - /url: /duxweb/codux/blob/main/README.zh-CN.md
+                - separator [ref=e487]
+                - paragraph [ref=e488]:
+                  - link "Codux AI" [ref=e489] [cursor=pointer]:
+                    - /url: /duxweb/codux/blob/main/docs/images/screenshot.png
+                    - img "Codux AI" [ref=e490]
+                - generic [ref=e491]:
+                  - heading "Why Codux AI" [level=2] [ref=e492]
+                  - 'link "Permalink: Why Codux AI" [ref=e493] [cursor=pointer]':
+                    - /url: "#why-codux-ai"
+                    - img [ref=e494]
+                - paragraph [ref=e496]:
+                  - text: AI coding CLIs are incredibly powerful — and incredibly easy to lose control of. Real work sprawls across projects, Git worktrees, terminals, sessions, tokens, remote shells, and context you half-remember.
+                  - strong [ref=e497]: Codux AI turns that chaos into one durable, native workspace built for serious AI coding.
+                - table [ref=e499]:
+                  - rowgroup [ref=e500]:
+                    - row "When AI coding gets messy Codux AI gives you" [ref=e501]:
+                      - columnheader "When AI coding gets messy" [ref=e502]
+                      - columnheader "Codux AI gives you" [ref=e503]
+                  - rowgroup [ref=e504]:
+                    - row "Every AI CLI has its own state One project-aware view across Codex, Claude Code, Gemini CLI, OpenCode, Kiro CLI, Kimi Code, CodeWhale, and Agy." [ref=e505]:
+                      - cell "Every AI CLI has its own state" [ref=e506]
+                      - cell "One project-aware view across Codex, Claude Code, Gemini CLI, OpenCode, Kiro CLI, Kimi Code, CodeWhale, and Agy." [ref=e507]
+                    - row "Long agent runs are hard to resume Live status, local history, session restore, and context that follows each worktree." [ref=e508]:
+                      - cell "Long agent runs are hard to resume" [ref=e509]
+                      - cell "Live status, local history, session restore, and context that follows each worktree." [ref=e510]
+                    - row "Parallel tasks collide A worktree-first model where every task keeps its own terminals, Git state, files, and AI sessions." [ref=e511]:
+                      - cell "Parallel tasks collide" [ref=e512]
+                      - cell "A worktree-first model where every task keeps its own terminals, Git state, files, and AI sessions." [ref=e513]
+                    - row "Token spend is a black box Usage by tool, model, project, worktree, and day — no spreadsheets." [ref=e514]:
+                      - cell "Token spend is a black box" [ref=e515]
+                      - cell "Usage by tool, model, project, worktree, and day — no spreadsheets." [ref=e516]
+                    - row "Context evaporates between sessions Local memory for habits, project profiles, and module notes, injected back into supported CLIs automatically." [ref=e517]:
+                      - cell "Context evaporates between sessions" [ref=e518]
+                      - cell "Local memory for habits, project profiles, and module notes, injected back into supported CLIs automatically." [ref=e519]
+                    - row "Server access is fragile Saved, tested SSH profiles and a codux-ssh command agents can use without ever seeing your credentials." [ref=e520]:
+                      - cell "Server access is fragile" [ref=e521]
+                      - cell "Saved, tested SSH profiles and a codux-ssh command agents can use without ever seeing your credentials." [ref=e522]:
+                        - text: Saved, tested SSH profiles and a
+                        - code [ref=e523]: codux-ssh
+                        - text: command agents can use
+                        - strong [ref=e524]: without ever seeing your credentials
+                        - text: .
+                    - row "You walk away mid-run Pair your phone over P2P / relay links and keep driving the session from anywhere." [ref=e525]:
+                      - cell "You walk away mid-run" [ref=e526]
+                      - cell "Pair your phone over P2P / relay links and keep driving the session from anywhere." [ref=e527]
+                    - row "The code lives on another machine Connect a headless host — a server, spare Mac, or Linux box — and drive its terminals, Git, and AI as if they were local." [ref=e528]:
+                      - cell "The code lives on another machine" [ref=e529]
+                      - cell "Connect a headless host — a server, spare Mac, or Linux box — and drive its terminals, Git, and AI as if they were local." [ref=e530]
+                - paragraph [ref=e531]:
+                  - text: Codux AI is
+                  - strong [ref=e532]: not
+                  - text: another editor. It's the control plane for developers who live in AI coding CLIs and need a rock-solid way to run multi-project, long-running agent work.
+                - generic [ref=e533]:
+                  - heading "What You Can Do" [level=2] [ref=e534]
+                  - 'link "Permalink: What You Can Do" [ref=e535] [cursor=pointer]':
+                    - /url: "#what-you-can-do"
+                    - img [ref=e536]
+                - paragraph [ref=e538]: Codux keeps AI coding work readable, recoverable, and connected across devices.
+                - list [ref=e539]:
+                  - listitem [ref=e540]: Run Codex, Claude Code, and other AI coding CLIs in one workspace.
+                  - listitem [ref=e541]: Track live agent status, history, resume, and token usage without leaving the terminal workflow.
+                  - listitem [ref=e542]: Keep parallel tasks isolated by project and Git worktree so sessions, files, and Git state do not collide.
+                  - listitem [ref=e543]:
+                    - text: Continue long-running work from your desktop, your phone, or a headless host running
+                    - code [ref=e544]: codux
+                    - text: .
+                  - listitem [ref=e545]: Keep terminals, files, memory, and AI sessions on the machine that owns the work.
+                - generic [ref=e546]:
+                  - heading "One Workspace, Every Device" [level=2] [ref=e547]
+                  - 'link "Permalink: One Workspace, Every Device" [ref=e548] [cursor=pointer]':
+                    - /url: "#one-workspace-every-device"
+                    - img [ref=e549]
+                - blockquote [ref=e551]:
+                  - paragraph [ref=e552]:
+                    - strong [ref=e553]: Beta.
+                    - text: Connecting to a headless host ships first as a beta in this release — the connection, pairing, and host-side data flow are still under active testing, so expect rough edges. Feedback is very welcome.
+                - paragraph [ref=e554]:
+                  - text: Desktop, phone, and a headless host all act as
+                  - strong [ref=e555]: peers
+                  - text: over end-to-end encrypted
+                  - strong [ref=e556]: P2P / relay links
+                  - text: ", so you can keep driving long agent runs from anywhere."
+                - list [ref=e557]:
+                  - listitem [ref=e558]:
+                    - strong [ref=e559]: Direct when possible.
+                    - text: Codux prefers P2P paths and falls back to relay when the network requires it.
+                  - listitem [ref=e560]:
+                    - strong [ref=e561]: Not SSH remote desktop.
+                    - text: Pair devices once, then connect straight into Codux itself.
+                  - listitem [ref=e562]:
+                    - strong [ref=e563]: No public IP required.
+                    - text: Desktop, phone, and host can pair and reconnect across ordinary home, office, and mobile networks.
+                - region "mermaid rendered output container" [ref=e564]:
+                  - generic [ref=e565]:
+                    - generic [ref=e566]:
+                      - group [ref=e567]:
+                        - button "Open dialog" [ref=e568] [cursor=pointer]:
+                          - img [ref=e569]
+                      - button "Copy mermaid code" [ref=e571] [cursor=pointer]:
+                        - img [ref=e572]
+                    - iframe [ref=e576]:
+                      - generic [active] [ref=f1e1]:
+                        - document [ref=f1e5]:
+                          - generic [ref=f1e7]:
+                            - generic [ref=f1e8]:
+                              - paragraph [ref=f1e15]: Work runs on (the host)
+                              - paragraph [ref=f1e22]: You drive from
+                            - generic [ref=f1e28]:
+                              - paragraph [ref=f1e34]: 🔒 P2P / Relay
+                              - paragraph [ref=f1e40]: 🔒 P2P / Relay
+                              - paragraph [ref=f1e46]: 🔒 P2P / Relay
+                              - paragraph [ref=f1e52]: 🔒 P2P / Relay
+                            - generic [ref=f1e53]:
+                              - paragraph [ref=f1e60]: 📱 Phone
+                              - paragraph [ref=f1e67]: 💻 Desktop
+                              - paragraph [ref=f1e74]: 💻 Another desktop
+                              - paragraph [ref=f1e81]:
+                                - text: 🖥️ Headless host
+                                - text: server · spare Mac · Linux
+                        - generic [ref=f1e82]:
+                          - button "Zoom in" [ref=f1e83] [cursor=pointer]:
+                            - img [ref=f1e84]
+                          - button "Zoom out" [ref=f1e87] [cursor=pointer]:
+                            - img [ref=f1e88]
+                          - button "Reset view" [ref=f1e91] [cursor=pointer]:
+                            - img [ref=f1e92]
+                          - button "Pan up" [ref=f1e94] [cursor=pointer]:
+                            - img [ref=f1e95]
+                          - button "Pan down" [ref=f1e97] [cursor=pointer]:
+                            - img [ref=f1e98]
+                          - button "Pan left" [ref=f1e100] [cursor=pointer]:
+                            - img [ref=f1e101]
+                          - button "Pan right" [ref=f1e103] [cursor=pointer]:
+                            - img [ref=f1e104]
+                - paragraph [ref=e577]:
+                  - text: Any controller — a
+                  - strong [ref=e578]: desktop
+                  - text: or a
+                  - strong [ref=e579]: phone
+                  - text: — can connect to any host —
+                  - strong [ref=e580]: another desktop
+                  - text: or a
+                  - strong [ref=e581]: headless host
+                  - text: ". A desktop is both: it hosts its own projects and can drive others; a phone drives only. The work stays on the host machine, so switching devices does not interrupt the session."
+                - list [ref=e582]:
+                  - listitem [ref=e583]:
+                    - strong [ref=e584]: Phone handoff.
+                    - text: Pair in seconds and continue the same terminals, history, and AI sessions from your phone.
+                  - listitem [ref=e585]:
+                    - strong [ref=e586]: Headless host.
+                    - text: Run
+                    - code [ref=e587]: codux
+                    - text: on a server, spare Mac, or Linux box and drive its terminals, Git, and AI as if they were local. See
+                    - link "apps/agent/README.md" [ref=e588] [cursor=pointer]:
+                      - /url: /duxweb/codux/blob/main/apps/agent/README.md
+                      - code [ref=e589]: apps/agent/README.md
+                    - text: .
+                  - listitem [ref=e590]:
+                    - strong [ref=e591]: Session continuity.
+                    - text: Reconnect to the same running shells and agent sessions after disconnects.
+                - generic [ref=e592]:
+                  - heading "Download" [level=2] [ref=e593]
+                  - 'link "Permalink: Download" [ref=e594] [cursor=pointer]':
+                    - /url: "#download"
+                    - img [ref=e595]
+                - paragraph [ref=e597]:
+                  - strong [ref=e598]: Desktop app
+                - paragraph [ref=e599]:
+                  - text: macOS — install with
+                  - link "Homebrew" [ref=e600] [cursor=pointer]:
+                    - /url: https://brew.sh
+                  - text: ":"
+                - generic [ref=e601]:
+                  - generic [ref=e602]: brew install --cask duxweb/tap/codux
+                  - button "Copy code to clipboard" [ref=e604] [cursor=pointer]:
+                    - img [ref=e605]
+                - paragraph [ref=e608]: "Or download directly:"
+                - table [ref=e610]:
+                  - rowgroup [ref=e611]:
+                    - row "Platform Download" [ref=e612]:
+                      - columnheader "Platform" [ref=e613]
+                      - columnheader "Download" [ref=e614]
+                  - rowgroup [ref=e615]:
+                    - row "macOS · Apple Silicon ⬇ codux-macos-aarch64.dmg" [ref=e616]:
+                      - cell "macOS · Apple Silicon" [ref=e617]
+                      - cell "⬇ codux-macos-aarch64.dmg" [ref=e618]:
+                        - link "⬇ codux-macos-aarch64.dmg" [ref=e619] [cursor=pointer]:
+                          - /url: https://github.com/duxweb/codux/releases/latest/download/codux-macos-aarch64.dmg
+                          - text: ⬇
+                          - code [ref=e620]: codux-macos-aarch64.dmg
+                    - row "macOS · Intel ⬇ codux-macos-x86_64.dmg" [ref=e621]:
+                      - cell "macOS · Intel" [ref=e622]
+                      - cell "⬇ codux-macos-x86_64.dmg" [ref=e623]:
+                        - link "⬇ codux-macos-x86_64.dmg" [ref=e624] [cursor=pointer]:
+                          - /url: https://github.com/duxweb/codux/releases/latest/download/codux-macos-x86_64.dmg
+                          - text: ⬇
+                          - code [ref=e625]: codux-macos-x86_64.dmg
+                    - row "Windows 11 · x64 ⬇ codux-windows-x86_64-setup.exe" [ref=e626]:
+                      - cell "Windows 11 · x64" [ref=e627]
+                      - cell "⬇ codux-windows-x86_64-setup.exe" [ref=e628]:
+                        - link "⬇ codux-windows-x86_64-setup.exe" [ref=e629] [cursor=pointer]:
+                          - /url: https://github.com/duxweb/codux/releases/latest/download/codux-windows-x86_64-setup.exe
+                          - text: ⬇
+                          - code [ref=e630]: codux-windows-x86_64-setup.exe
+                - paragraph [ref=e631]:
+                  - text: Open the macOS
+                  - code [ref=e632]: .dmg
+                  - text: and drag Codux to Applications; double-click the Windows installer. Then open a project, start your AI CLI, and go.
+                - paragraph [ref=e633]:
+                  - strong [ref=e634]:
+                    - text: Headless host (
+                    - code [ref=e635]: codux-agent
+                    - text: )
+                  - text: — Beta, ships with 2.0
+                - paragraph [ref=e636]:
+                  - text: macOS / Linux — one line (auto-detects OS/arch, installs as
+                  - code [ref=e637]: codux
+                  - text: on your
+                  - code [ref=e638]: PATH
+                  - text: "):"
+                - generic [ref=e639]:
+                  - generic [ref=e640]: curl -fsSL https://raw.githubusercontent.com/duxweb/codux/main/apps/agent/scripts/install.sh | sh
+                  - button "Copy code to clipboard" [ref=e642] [cursor=pointer]:
+                    - img [ref=e643]
+                - paragraph [ref=e646]:
+                  - text: "Flags:"
+                  - code [ref=e647]: "--beta"
+                  - text: ·
+                  - code [ref=e648]: "--version <x.y.z>"
+                  - text: ·
+                  - code [ref=e649]: "--dir <path>"
+                  - text: ·
+                  - code [ref=e650]: "--setup"
+                  - text: ·
+                  - code [ref=e651]: "--mirror <prefix>"
+                  - text: (if GitHub is slow where you are) ·
+                  - code [ref=e652]: "--uninstall"
+                  - text: ". Or download the binary directly:"
+                - table [ref=e654]:
+                  - rowgroup [ref=e655]:
+                    - row "Platform Download" [ref=e656]:
+                      - columnheader "Platform" [ref=e657]
+                      - columnheader "Download" [ref=e658]
+                  - rowgroup [ref=e659]:
+                    - row "macOS · Apple Silicon ⬇ codux-macos-aarch64" [ref=e660]:
+                      - cell "macOS · Apple Silicon" [ref=e661]
+                      - cell "⬇ codux-macos-aarch64" [ref=e662]:
+                        - link "⬇ codux-macos-aarch64" [ref=e663] [cursor=pointer]:
+                          - /url: https://github.com/duxweb/codux/releases/latest/download/codux-macos-aarch64
+                          - text: ⬇
+                          - code [ref=e664]: codux-macos-aarch64
+                    - row "macOS · Intel ⬇ codux-macos-x86_64" [ref=e665]:
+                      - cell "macOS · Intel" [ref=e666]
+                      - cell "⬇ codux-macos-x86_64" [ref=e667]:
+                        - link "⬇ codux-macos-x86_64" [ref=e668] [cursor=pointer]:
+                          - /url: https://github.com/duxweb/codux/releases/latest/download/codux-macos-x86_64
+                          - text: ⬇
+                          - code [ref=e669]: codux-macos-x86_64
+                    - row "Linux · arm64 ⬇ codux-linux-aarch64" [ref=e670]:
+                      - cell "Linux · arm64" [ref=e671]
+                      - cell "⬇ codux-linux-aarch64" [ref=e672]:
+                        - link "⬇ codux-linux-aarch64" [ref=e673] [cursor=pointer]:
+                          - /url: https://github.com/duxweb/codux/releases/latest/download/codux-linux-aarch64
+                          - text: ⬇
+                          - code [ref=e674]: codux-linux-aarch64
+                    - row "Linux · x64 ⬇ codux-linux-x86_64" [ref=e675]:
+                      - cell "Linux · x64" [ref=e676]
+                      - cell "⬇ codux-linux-x86_64" [ref=e677]:
+                        - link "⬇ codux-linux-x86_64" [ref=e678] [cursor=pointer]:
+                          - /url: https://github.com/duxweb/codux/releases/latest/download/codux-linux-x86_64
+                          - text: ⬇
+                          - code [ref=e679]: codux-linux-x86_64
+                    - row "Windows · x64 ⬇ codux-windows-x86_64.exe" [ref=e680]:
+                      - cell "Windows · x64" [ref=e681]
+                      - cell "⬇ codux-windows-x86_64.exe" [ref=e682]:
+                        - link "⬇ codux-windows-x86_64.exe" [ref=e683] [cursor=pointer]:
+                          - /url: https://github.com/duxweb/codux/releases/latest/download/codux-windows-x86_64.exe
+                          - text: ⬇
+                          - code [ref=e684]: codux-windows-x86_64.exe
+                - paragraph [ref=e685]:
+                  - text: Put the binary on your
+                  - code [ref=e686]: PATH
+                  - text: as
+                  - code [ref=e687]: codux
+                  - text: ", then run"
+                  - code [ref=e688]: codux config
+                  - text: →
+                  - code [ref=e689]: codux install
+                  - text: →
+                  - code [ref=e690]: codux qrcode
+                  - text: .
+                - generic [ref=e691]:
+                  - heading "Headless host commands (codux-agent)" [level=2] [ref=e692]:
+                    - text: Headless host commands (
+                    - code [ref=e693]: codux-agent
+                    - text: )
+                  - 'link "Permalink: Headless host commands (codux-agent)" [ref=e694] [cursor=pointer]':
+                    - /url: "#headless-host-commands-codux-agent"
+                    - img [ref=e695]
+                - table [ref=e698]:
+                  - rowgroup [ref=e699]:
+                    - row "Command What it does" [ref=e700]:
+                      - columnheader "Command" [ref=e701]
+                      - columnheader "What it does" [ref=e702]
+                  - rowgroup [ref=e703]:
+                    - row "codux config Interactive setup (device name, relay). Writes codux.toml." [ref=e704]:
+                      - cell "codux config" [ref=e705]:
+                        - code [ref=e706]: codux config
+                      - cell "Interactive setup (device name, relay). Writes codux.toml." [ref=e707]:
+                        - text: Interactive setup (device name, relay). Writes
+                        - code [ref=e708]: codux.toml
+                        - text: .
+                    - row "codux install Run as a startup service (launchd / systemd --user / Task Scheduler)." [ref=e709]:
+                      - cell "codux install" [ref=e710]:
+                        - code [ref=e711]: codux install
+                      - cell "Run as a startup service (launchd / systemd --user / Task Scheduler)." [ref=e712]:
+                        - text: Run as a startup service (launchd /
+                        - code [ref=e713]: systemd --user
+                        - text: / Task Scheduler).
+                    - row "codux start / stop Start (foreground) or stop the host." [ref=e714]:
+                      - cell "codux start / stop" [ref=e715]:
+                        - code [ref=e716]: codux start
+                        - text: /
+                        - code [ref=e717]: stop
+                      - cell "Start (foreground) or stop the host." [ref=e718]
+                    - row "codux status Whether it's running, node id, and paired-device count." [ref=e719]:
+                      - cell "codux status" [ref=e720]:
+                        - code [ref=e721]: codux status
+                      - cell "Whether it's running, node id, and paired-device count." [ref=e722]
+                    - row "codux qrcode / link Show the pairing QR / print the pairing ticket to paste on the desktop." [ref=e723]:
+                      - cell "codux qrcode / link" [ref=e724]:
+                        - code [ref=e725]: codux qrcode
+                        - text: /
+                        - code [ref=e726]: link
+                      - cell "Show the pairing QR / print the pairing ticket to paste on the desktop." [ref=e727]
+                    - row "codux device List paired devices; device:del <id> / device:rename <id> / device:clear to manage." [ref=e728]:
+                      - cell "codux device" [ref=e729]:
+                        - code [ref=e730]: codux device
+                      - cell "List paired devices; device:del <id> / device:rename <id> / device:clear to manage." [ref=e731]:
+                        - text: List paired devices;
+                        - code [ref=e732]: device:del <id>
+                        - text: /
+                        - code [ref=e733]: device:rename <id>
+                        - text: /
+                        - code [ref=e734]: device:clear
+                        - text: to manage.
+                    - row "codux update Download, verify, and replace this binary, then restart the host." [ref=e735]:
+                      - cell "codux update" [ref=e736]:
+                        - code [ref=e737]: codux update
+                      - cell "Download, verify, and replace this binary, then restart the host." [ref=e738]
+                    - row "codux uninstall Stop and remove the service." [ref=e739]:
+                      - cell "codux uninstall" [ref=e740]:
+                        - code [ref=e741]: codux uninstall
+                      - cell "Stop and remove the service." [ref=e742]
+                - paragraph [ref=e743]:
+                  - text: Run
+                  - code [ref=e744]: codux <command> --help
+                  - text: for details, or see
+                  - link "apps/agent/README.md" [ref=e745] [cursor=pointer]:
+                    - /url: /duxweb/codux/blob/main/apps/agent/README.md
+                    - code [ref=e746]: apps/agent/README.md
+                  - text: .
+                - generic [ref=e747]:
+                  - heading "Keyboard Shortcuts" [level=2] [ref=e748]
+                  - 'link "Permalink: Keyboard Shortcuts" [ref=e749] [cursor=pointer]':
+                    - /url: "#keyboard-shortcuts"
+                    - img [ref=e750]
+                - table [ref=e753]:
+                  - rowgroup [ref=e754]:
+                    - row "Action Shortcut" [ref=e755]:
+                      - columnheader "Action" [ref=e756]
+                      - columnheader "Shortcut" [ref=e757]
+                  - rowgroup [ref=e758]:
+                    - row "New Split ⌘T" [ref=e759]:
+                      - cell "New Split" [ref=e760]
+                      - cell "⌘T" [ref=e761]:
+                        - code [ref=e762]: ⌘T
+                    - row "New Tab ⌘D" [ref=e763]:
+                      - cell "New Tab" [ref=e764]
+                      - cell "⌘D" [ref=e765]:
+                        - code [ref=e766]: ⌘D
+                    - row "Toggle Git Panel ⌘G" [ref=e767]:
+                      - cell "Toggle Git Panel" [ref=e768]
+                      - cell "⌘G" [ref=e769]:
+                        - code [ref=e770]: ⌘G
+                    - row "Toggle AI Panel ⌘Y" [ref=e771]:
+                      - cell "Toggle AI Panel" [ref=e772]
+                      - cell "⌘Y" [ref=e773]:
+                        - code [ref=e774]: ⌘Y
+                    - row "Switch Project ⌘1 – ⌘9" [ref=e775]:
+                      - cell "Switch Project" [ref=e776]
+                      - cell "⌘1 – ⌘9" [ref=e777]:
+                        - code [ref=e778]: ⌘1
+                        - text: –
+                        - code [ref=e779]: ⌘9
+                - paragraph [ref=e780]:
+                  - text: Customize everything in
+                  - strong [ref=e781]: Settings → Shortcuts
+                  - text: .
+                - generic [ref=e782]:
+                  - heading "Demo Video" [level=2] [ref=e783]
+                  - 'link "Permalink: Demo Video" [ref=e784] [cursor=pointer]':
+                    - /url: "#demo-video"
+                    - img [ref=e785]
+                - paragraph [ref=e787]:
+                  - text: GitHub READMEs can't embed third-party players — watch the demo on
+                  - link "Bilibili" [ref=e788] [cursor=pointer]:
+                    - /url: https://www.bilibili.com/video/BV1mK9vBCEYD/
+                  - text: .
+                - generic [ref=e789]:
+                  - heading "System Requirements" [level=2] [ref=e790]
+                  - 'link "Permalink: System Requirements" [ref=e791] [cursor=pointer]':
+                    - /url: "#system-requirements"
+                    - img [ref=e792]
+                - paragraph [ref=e794]:
+                  - strong [ref=e795]: Desktop app
+                - list [ref=e796]:
+                  - listitem [ref=e797]: macOS 14.0 (Sonoma) or later
+                  - listitem [ref=e798]: Windows 11
+                - paragraph [ref=e799]:
+                  - strong [ref=e800]:
+                    - text: Headless host (
+                    - code [ref=e801]: codux-agent
+                    - text: )
+                - list [ref=e802]:
+                  - listitem [ref=e803]: macOS, Linux, and Windows (x86_64 and arm64)
+                - generic [ref=e804]:
+                  - heading "Feedback" [level=2] [ref=e805]
+                  - 'link "Permalink: Feedback" [ref=e806] [cursor=pointer]':
+                    - /url: "#feedback"
+                    - img [ref=e807]
+                - paragraph [ref=e809]:
+                  - text: Found a bug or have a feature request? Open an
+                  - link "issue on GitHub" [ref=e810] [cursor=pointer]:
+                    - /url: https://github.com/duxweb/codux/issues
+                  - text: .
+                - paragraph [ref=e811]:
+                  - text: For bug reports, use
+                  - strong [ref=e812]: Help → Export Diagnostics
+                  - text: and attach the generated
+                  - code [ref=e813]: .zip
+                  - text: — it bundles runtime logs, rotated logs, performance summaries, saved app state, invalid-state backups, and matching macOS diagnostic reports when available.
+                - paragraph [ref=e814]: "Manual log paths:"
+                - list [ref=e815]:
+                  - listitem [ref=e816]:
+                    - code [ref=e817]: ~/Library/Application Support/Codux/logs/runtime-rust.log
+                  - listitem [ref=e818]:
+                    - code [ref=e819]: ~/Library/Application Support/Codux/logs/performance-summary.json
+                  - listitem [ref=e820]:
+                    - code [ref=e821]: "%APPDATA%\\Codux\\logs\\runtime-rust.log"
+                - separator [ref=e822]
+                - generic [ref=e823]:
+                  - heading "Contributors" [level=2] [ref=e824]
+                  - 'link "Permalink: Contributors" [ref=e825] [cursor=pointer]':
+                    - /url: "#contributors"
+                    - img [ref=e826]
+                - paragraph [ref=e828]: Thanks to everyone who has contributed code, issues, testing, and feedback to Codux.
+                - paragraph [ref=e829]:
+                  - link "Codux contributors" [ref=e830] [cursor=pointer]:
+                    - /url: https://github.com/duxweb/codux/graphs/contributors
+                    - img "Codux contributors" [ref=e831]
+                - generic [ref=e832]:
+                  - heading "Contact & Support" [level=2] [ref=e833]
+                  - 'link "Permalink: Contact & Support" [ref=e834] [cursor=pointer]':
+                    - /url: "#contact--support"
+                    - img [ref=e835]
+                - paragraph [ref=e837]: Add the author on WeChat, or buy the author a coffee.
+                - paragraph [ref=e838]:
+                  - link "Author WeChat QR" [ref=e839] [cursor=pointer]:
+                    - /url: /duxweb/codux/blob/main/docs/images/wechat-author.png
+                    - img "Author WeChat QR" [ref=e840]
+                  - link "WeChat support QR" [ref=e841] [cursor=pointer]:
+                    - /url: /duxweb/codux/blob/main/docs/images/wechat-donate.jpg
+                    - img "WeChat support QR" [ref=e842]
+                  - link "Alipay support QR" [ref=e843] [cursor=pointer]:
+                    - /url: /duxweb/codux/blob/main/docs/images/alipay-donate.jpg
+                    - img "Alipay support QR" [ref=e844]
+                - generic [ref=e845]:
+                  - heading "GitHub Star Trend" [level=2] [ref=e846]
+                  - 'link "Permalink: GitHub Star Trend" [ref=e847] [cursor=pointer]':
+                    - /url: "#github-star-trend"
+                    - img [ref=e848]
+                - paragraph [ref=e850]:
+                  - link "Star History Chart" [ref=e851] [cursor=pointer]:
+                    - /url: https://star-history.com/#duxweb/codux&Date
+                    - img "Star History Chart" [ref=e852]
+                - paragraph [ref=e853]: Wanted to be dmux, but that name was taken. So it's Codux now — which sounds like "Cool Dux" in Chinese.
+                - paragraph [ref=e854]:
+                  - link "codux.dux.cn" [ref=e855] [cursor=pointer]:
+                    - /url: https://codux.dux.cn
+        - generic [ref=e859]:
+          - generic [ref=e862]:
+            - heading "About" [level=2] [ref=e863]
+            - paragraph [ref=e864]: ⬛ A native connected terminal for AI agent development. 为 AI Agent 开发而生的原生互联终端。
+            - generic [ref=e865]:
+              - img [ref=e866]
+              - link "codux.dux.cn" [ref=e869] [cursor=pointer]:
+                - /url: https://codux.dux.cn
+            - heading "Resources" [level=3] [ref=e870]
+            - link "Readme" [ref=e872] [cursor=pointer]:
+              - /url: "#readme-ov-file"
+              - img [ref=e873]
+              - text: Readme
+            - link "Activity" [ref=e876] [cursor=pointer]:
+              - /url: /duxweb/codux/activity
+              - img [ref=e877]
+              - text: Activity
+            - link "Custom properties" [ref=e880] [cursor=pointer]:
+              - /url: /duxweb/codux/custom-properties
+              - img [ref=e881]
+              - text: Custom properties
+            - heading "Stars" [level=3] [ref=e883]
+            - link "109 stars" [ref=e885] [cursor=pointer]:
+              - /url: /duxweb/codux/stargazers
+              - img [ref=e886]
+              - strong [ref=e888]: "109"
+              - text: stars
+            - heading "Watchers" [level=3] [ref=e889]
+            - link "0 watching" [ref=e891] [cursor=pointer]:
+              - /url: /duxweb/codux/watchers
+              - img [ref=e892]
+              - strong [ref=e894]: "0"
+              - text: watching
+            - heading "Forks" [level=3] [ref=e895]
+            - link "12 forks" [ref=e897] [cursor=pointer]:
+              - /url: /duxweb/codux/forks
+              - img [ref=e898]
+              - strong [ref=e900]: "12"
+              - text: forks
+            - link "Report repository" [ref=e902] [cursor=pointer]:
+              - /url: /contact/report-content?content_url=https%3A%2F%2Fgithub.com%2Fduxweb%2Fcodux&report=duxweb+%28user%29
+          - generic [ref=e904]:
+            - heading "Releases 80" [level=2] [ref=e905]:
+              - link "Releases 80" [ref=e906] [cursor=pointer]:
+                - /url: /duxweb/codux/releases
+                - text: Releases
+                - generic "80" [ref=e907]
+            - link "Codux 1.9.1 Latest Jun 18, 2026last week" [ref=e908] [cursor=pointer]:
+              - /url: /duxweb/codux/releases/tag/v1.9.1
+              - img [ref=e909]
+              - generic [ref=e911]:
+                - generic [ref=e912]:
+                  - generic [ref=e913]: Codux 1.9.1
+                  - 'generic "Label: Latest" [ref=e914]': Latest
+                - generic [ref=e915]: Jun 18, 2026last week
+            - link "+ 79 releases" [ref=e917] [cursor=pointer]:
+              - /url: /duxweb/codux/releases
+          - generic [ref=e919]:
+            - heading "Packages" [level=2] [ref=e920]:
+              - link "Packages" [ref=e921] [cursor=pointer]:
+                - /url: /orgs/duxweb/packages?repo_name=codux
+            - generic [ref=e922]: No packages published
+          - generic [ref=e924]:
+            - heading "Contributors 4" [level=2] [ref=e925]:
+              - link "Contributors 4" [ref=e926] [cursor=pointer]:
+                - /url: /duxweb/codux/graphs/contributors
+                - text: Contributors
+                - generic "4" [ref=e927]
+            - list [ref=e928]:
+              - listitem [ref=e929]:
+                - link "@dux-web" [ref=e930] [cursor=pointer]:
+                  - /url: https://github.com/dux-web
+                  - img "@dux-web" [ref=e931]
+                - link "dux-web Mr.L" [ref=e933] [cursor=pointer]:
+                  - /url: https://github.com/dux-web
+                  - strong [ref=e934]: dux-web
+                  - text: Mr.L
+              - listitem [ref=e935]:
+                - link "@claude" [ref=e936] [cursor=pointer]:
+                  - /url: https://github.com/claude
+                  - img "@claude" [ref=e937]
+                - link "claude Claude" [ref=e939] [cursor=pointer]:
+                  - /url: https://github.com/claude
+                  - strong [ref=e940]: claude
+                  - text: Claude
+              - listitem [ref=e941]:
+                - link "@github-actions[bot]" [ref=e942] [cursor=pointer]:
+                  - /url: https://github.com/apps/github-actions
+                  - img "@github-actions[bot]" [ref=e943]
+                - link "github-actions[bot]" [ref=e945] [cursor=pointer]:
+                  - /url: https://github.com/apps/github-actions
+                  - strong [ref=e946]: github-actions[bot]
+              - listitem [ref=e947]:
+                - link "@rarean" [ref=e948] [cursor=pointer]:
+                  - /url: https://github.com/rarean
+                  - img "@rarean" [ref=e949]
+                - link "rarean Aaron Perez" [ref=e951] [cursor=pointer]:
+                  - /url: https://github.com/rarean
+                  - strong [ref=e952]: rarean
+                  - text: Aaron Perez
+          - generic [ref=e954]:
+            - heading "Languages" [level=2] [ref=e955]
+            - list [ref=e965]:
+              - listitem [ref=e966]:
+                - link "Rust 78.6%" [ref=e967] [cursor=pointer]:
+                  - /url: /duxweb/codux/search?l=rust
+                  - img [ref=e968]
+                  - generic [ref=e970]: Rust
+                  - generic [ref=e971]: 78.6%
+              - listitem [ref=e972]:
+                - link "Dart 18.1%" [ref=e973] [cursor=pointer]:
+                  - /url: /duxweb/codux/search?l=dart
+                  - img [ref=e974]
+                  - generic [ref=e976]: Dart
+                  - generic [ref=e977]: 18.1%
+              - listitem [ref=e978]:
+                - link "Shell 1.2%" [ref=e979] [cursor=pointer]:
+                  - /url: /duxweb/codux/search?l=shell
+                  - img [ref=e980]
+                  - generic [ref=e982]: Shell
+                  - generic [ref=e983]: 1.2%
+              - listitem [ref=e984]:
+                - link "JavaScript 0.9%" [ref=e985] [cursor=pointer]:
+                  - /url: /duxweb/codux/search?l=javascript
+                  - img [ref=e986]
+                  - generic [ref=e988]: JavaScript
+                  - generic [ref=e989]: 0.9%
+              - listitem [ref=e990]:
+                - link "PowerShell 0.5%" [ref=e991] [cursor=pointer]:
+                  - /url: /duxweb/codux/search?l=powershell
+                  - img [ref=e992]
+                  - generic [ref=e994]: PowerShell
+                  - generic [ref=e995]: 0.5%
+              - listitem [ref=e996]:
+                - link "C++ 0.3%" [ref=e997] [cursor=pointer]:
+                  - /url: /duxweb/codux/search?l=c%2B%2B
+                  - img [ref=e998]
+                  - generic [ref=e1000]: C++
+                  - generic [ref=e1001]: 0.3%
+              - listitem [ref=e1002]:
+                - generic [ref=e1003]:
+                  - img [ref=e1004]
+                  - generic [ref=e1006]: Other
+                  - generic [ref=e1007]: 0.4%
+  - contentinfo [ref=e1009]:
+    - heading "Footer" [level=2] [ref=e1010]
+    - generic [ref=e1011]:
+      - generic [ref=e1012]:
+        - link "GitHub Homepage" [ref=e1013] [cursor=pointer]:
+          - /url: https://github.com
+          - img [ref=e1014]
+        - generic [ref=e1016]: © 2026 GitHub, Inc.
+      - navigation "Footer" [ref=e1017]:
+        - heading "Footer navigation" [level=3] [ref=e1018]
+        - list "Footer navigation" [ref=e1019]:
+          - listitem [ref=e1020]:
+            - link "Terms" [ref=e1021] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/github-terms/github-terms-of-service
+          - listitem [ref=e1022]:
+            - link "Privacy" [ref=e1023] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/privacy-policies/github-privacy-statement
+          - listitem [ref=e1024]:
+            - link "Security" [ref=e1025] [cursor=pointer]:
+              - /url: https://github.com/security
+          - listitem [ref=e1026]:
+            - link "Status" [ref=e1027] [cursor=pointer]:
+              - /url: https://www.githubstatus.com/
+          - listitem [ref=e1028]:
+            - link "Community" [ref=e1029] [cursor=pointer]:
+              - /url: https://github.community/
+          - listitem [ref=e1030]:
+            - link "Docs" [ref=e1031] [cursor=pointer]:
+              - /url: https://docs.github.com/
+          - listitem [ref=e1032]:
+            - link "Contact" [ref=e1033] [cursor=pointer]:
+              - /url: https://support.github.com?tags=dotcom-footer
+          - listitem [ref=e1034]:
+            - button "Manage cookies" [ref=e1036] [cursor=pointer]
+          - listitem [ref=e1037]:
+            - button "Do not share my personal information" [ref=e1039] [cursor=pointer]

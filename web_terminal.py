@@ -1,12 +1,13 @@
 import asyncio
 import json
+import logging
 import os
 import socket
 import threading
 import time
 import secrets
-from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
+from flask import Flask, request, jsonify
 from websockets import serve
 from winpty import PtyProcess
 
@@ -325,60 +326,49 @@ HTML = r"""<!DOCTYPE html>
 # 在 HTML 中注入实际 WS 端口
 HTML = HTML.replace("WS_PORT_PLACEHOLDER", str(WS_PORT))
 
+# 关闭 Flask/Werkzeug access log
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.WARNING)
 
-class SimpleHandler(SimpleHTTPRequestHandler):
-    def log_message(self, format, *args):
-        pass  # 关闭 access log
+app = Flask(__name__)
 
-    def do_GET(self):
-        if self.path == '/':
-            self.send_response(200)
-            self.send_header('Content-type', 'text/html; charset=utf-8')
-            self.end_headers()
-            self.wfile.write(HTML.encode('utf-8'))
-        else:
-            super().do_GET()
 
-    def do_POST(self):
-        if self.path == '/login':
-            ip = self.client_address[0]
-            now = time.time()
+@app.route('/')
+def index():
+    return HTML
 
-            # 登录频率限制
-            if ip in login_attempts:
-                count, first = login_attempts[ip]
-                if now - first > LOGIN_WINDOW:
-                    count = 0
-                    login_attempts[ip] = (0, now)
-                elif count >= LOGIN_MAX_ATTEMPTS:
-                    self.send_json(429, {'success': False, 'error': 'Too many attempts, try later'})
-                    return
-            else:
-                login_attempts[ip] = (0, now)
 
-            content_length = int(self.headers.get('Content-Length', 0))
-            data = json.loads(self.rfile.read(content_length).decode())
+@app.route('/login', methods=['POST'])
+def login():
+    ip = request.remote_addr
+    now = time.time()
 
-            if data.get('username') == USERNAME and data.get('password') == PASSWORD:
-                token = secrets.token_hex(16)
-                terminals[token] = now
+    # 登录频率限制
+    if ip in login_attempts:
+        count, first = login_attempts[ip]
+        if now - first > LOGIN_WINDOW:
+            count = 0
+            login_attempts[ip] = (0, now)
+        elif count >= LOGIN_MAX_ATTEMPTS:
+            return jsonify({'success': False, 'error': 'Too many attempts, try later'}), 429
+    else:
+        login_attempts[ip] = (0, now)
 
-                # 清理过期 token
-                expired = [t for t, ts in terminals.items() if now - ts > TOKEN_EXPIRE]
-                for t in expired:
-                    del terminals[t]
+    data = request.get_json(silent=True) or {}
+    if data.get('username') == USERNAME and data.get('password') == PASSWORD:
+        token = secrets.token_hex(16)
+        terminals[token] = now
 
-                self.send_json(200, {'success': True, 'token': token})
-            else:
-                count, first = login_attempts[ip]
-                login_attempts[ip] = (count + 1, first)
-                self.send_json(401, {'success': False, 'error': 'Invalid credentials'})
+        # 清理过期 token
+        expired = [t for t, ts in terminals.items() if now - ts > TOKEN_EXPIRE]
+        for t in expired:
+            del terminals[t]
 
-    def send_json(self, status, data):
-        self.send_response(status)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        self.wfile.write(json.dumps(data).encode())
+        return jsonify({'success': True, 'token': token})
+    else:
+        count, first = login_attempts[ip]
+        login_attempts[ip] = (count + 1, first)
+        return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
 
 
 async def ws_handler(ws):
@@ -454,9 +444,12 @@ async def ws_handler(ws):
 
 async def main():
     async with serve(ws_handler, "0.0.0.0", WS_PORT):
-        server = HTTPServer(("0.0.0.0", HTTP_PORT), SimpleHandler)
         print(f"Remote Shell Ready: http://{socket.gethostname()}:{HTTP_PORT}")
-        threading.Thread(target=server.serve_forever, daemon=True).start()
+        threading.Thread(
+            target=app.run,
+            kwargs={'host': '0.0.0.0', 'port': HTTP_PORT, 'debug': False, 'use_reloader': False},
+            daemon=True
+        ).start()
         await asyncio.Event().wait()
 
 

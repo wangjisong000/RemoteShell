@@ -1,3 +1,4 @@
 # RemoteShell Web Terminal Dependencies
 websockets>=10.0
 winpty>=0.5
+flask>=2.0
