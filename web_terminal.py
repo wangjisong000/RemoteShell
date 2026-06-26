@@ -9,6 +9,7 @@ import secrets
 from urllib.parse import urlparse, parse_qs
 from flask import Flask, request, jsonify, session
 from websockets import serve
+from websockets.exceptions import ConnectionClosed
 from winpty import PtyProcess
 
 # --- 配置 ---
@@ -22,7 +23,7 @@ TOKEN_EXPIRE = 86400  # token 有效期 24 小时，每次交互自动续期
 LOGIN_MAX_ATTEMPTS = 5
 LOGIN_WINDOW = 600  # 10 分钟内
 
-terminals = {}       # token -> timestamp
+sessions = {}        # token -> {'proc': PtyProcess|None, 'ts': float}
 login_attempts = {}  # ip -> (count, first_attempt_time)
 
 HTML = r"""<!DOCTYPE html>
@@ -354,7 +355,18 @@ HTML = r"""<!DOCTYPE html>
             const wsUrl = `ws://${window.location.hostname}:WS_PORT_PLACEHOLDER?token=${token}&key=${encodeURIComponent(ACCESS_TOKEN)}&cols=${dims.cols}&rows=${dims.rows}`;
             socket = new WebSocket(wsUrl);
 
-            socket.onmessage = (e) => term.write(e.data);
+            socket.onmessage = (e) => {
+                if (typeof e.data === 'string' && e.data.startsWith('{')) {
+                    try {
+                        const msg = JSON.parse(e.data);
+                        if (msg.type === 'reconnected') {
+                            term.write('\x1b[1;33m[RECONNECTED]\x1b[0m\r\n');
+                            return;
+                        }
+                    } catch (_) {}
+                }
+                term.write(e.data);
+            };
 
             term.onData(data => {
                 if (socket.readyState === WebSocket.OPEN) {
@@ -488,12 +500,14 @@ def login():
     data = request.get_json(silent=True) or {}
     if data.get('username') == USERNAME and data.get('password') == PASSWORD:
         token = secrets.token_hex(16)
-        terminals[token] = now
+        sessions[token] = {'proc': None, 'ts': now}
 
-        # 清理过期 token
-        expired = [t for t, ts in terminals.items() if now - ts > TOKEN_EXPIRE]
+        # 清理过期 session（终止 PTY + 删除）
+        expired = [t for t, s in sessions.items() if now - s['ts'] > TOKEN_EXPIRE]
         for t in expired:
-            del terminals[t]
+            if sessions[t]['proc']:
+                sessions[t]['proc'].terminate()
+            del sessions[t]
 
         return jsonify({'success': True, 'token': token})
     else:
@@ -506,8 +520,8 @@ def login():
 def verify():
     data = request.get_json(silent=True) or {}
     token = data.get('token')
-    if token and token in terminals:
-        if time.time() - terminals[token] < TOKEN_EXPIRE:
+    if token and token in sessions:
+        if time.time() - sessions[token]['ts'] < TOKEN_EXPIRE:
             return jsonify({'valid': True})
     return jsonify({'valid': False}), 401
 
@@ -524,20 +538,31 @@ async def ws_handler(ws):
         await ws.close()
         return
 
-    if not token or token not in terminals:
+    if not token or token not in sessions:
         await ws.close()
         return
 
     # 检查 token 过期
-    if time.time() - terminals.get(token, 0) > TOKEN_EXPIRE:
-        terminals.pop(token, None)
+    if time.time() - sessions[token]['ts'] > TOKEN_EXPIRE:
+        if sessions[token]['proc']:
+            sessions[token]['proc'].terminate()
+        del sessions[token]
         await ws.close()
         return
 
     env = os.environ.copy()
     env["TERM"] = "xterm-256color"
 
-    proc = PtyProcess.spawn('cmd.exe', env=env, dimensions=(rows, cols))
+    # 复用已有 PTY 还是新建
+    session = sessions[token]
+    reconnected = session['proc'] is not None
+    if reconnected:
+        proc = session['proc']
+        await ws.send('{"type":"reconnected"}')
+    else:
+        proc = PtyProcess.spawn('cmd.exe', env=env, dimensions=(rows, cols))
+        session['proc'] = proc
+
     loop = asyncio.get_running_loop()
     running = True
 
@@ -564,9 +589,8 @@ async def ws_handler(ws):
 
     try:
         async for msg in ws:
-            # 每次交互续期 token
-            if token in terminals:
-                terminals[token] = time.time()
+            # 每次交互续期
+            session['ts'] = time.time()
 
             # 检测 JSON 控制消息 (resize / logout)
             if isinstance(msg, str) and msg.startswith('{'):
@@ -579,17 +603,34 @@ async def ws_handler(ws):
                         cols, rows = new_cols, new_rows
                         continue
                     elif ctrl.get('type') == 'logout':
+                        running = False
+                        proc.terminate()
+                        session['proc'] = None
+                        del sessions[token]
                         break
                 except (json.JSONDecodeError, ValueError):
                     pass
             proc.write(msg)
+    except ConnectionClosed:
+        pass
     finally:
         running = False
-        proc.terminate()
-        # token 保留，刷新页面后自动恢复，24h 过期自动清理
+        # PTY 保留，刷新页面后重连同一个终端
+
+
+def cleanup_sessions():
+    while True:
+        time.sleep(3600)  # 每小时清理一次
+        now = time.time()
+        expired = [t for t, s in sessions.items() if now - s['ts'] > TOKEN_EXPIRE]
+        for t in expired:
+            if sessions[t]['proc']:
+                sessions[t]['proc'].terminate()
+            del sessions[t]
 
 
 def start_ws_server():
+    threading.Thread(target=cleanup_sessions, daemon=True).start()
     async def _run():
         async with serve(ws_handler, "0.0.0.0", WS_PORT):
             await asyncio.Event().wait()
