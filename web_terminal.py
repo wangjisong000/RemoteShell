@@ -1,17 +1,26 @@
 import asyncio
 import json
 import os
+import socket
 import threading
+import time
 import secrets
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
-from websockets.server import serve
+from websockets import serve
 from winpty import PtyProcess
 
 # --- 配置 ---
-USERNAME = "admin"
-PASSWORD = "123456"
-terminals = {}
+USERNAME = os.environ.get("RS_USER", "admin")
+PASSWORD = os.environ.get("RS_PASS", "123456")
+HTTP_PORT = int(os.environ.get("RS_HTTP_PORT", "5010"))
+WS_PORT = int(os.environ.get("RS_WS_PORT", "5011"))
+TOKEN_EXPIRE = 86400  # token 有效期 24 小时，每次交互自动续期
+LOGIN_MAX_ATTEMPTS = 5
+LOGIN_WINDOW = 600  # 10 分钟内
+
+terminals = {}       # token -> timestamp
+login_attempts = {}  # ip -> (count, first_attempt_time)
 
 HTML = r"""<!DOCTYPE html>
 <html>
@@ -21,7 +30,8 @@ HTML = r"""<!DOCTYPE html>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Remote Shell</title>
-    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"
+        onerror="document.getElementById('cdn-error').style.display='block'"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css"/>
@@ -36,6 +46,7 @@ HTML = r"""<!DOCTYPE html>
         input { width: 100%; padding: 14px 12px; margin: 10px 0; border: 1px solid #444; background: #1a1a1a; color: #00ff00; border-radius: 8px; font-size: 16px; }
         button { width: 100%; padding: 14px 20px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; margin-top: 10px; }
         button:active { background: #0056b3; }
+        .login-error { color: #ff4444; font-size: 14px; margin-top: 10px; display: none; }
 
         #terminal-container { flex: 1; padding: 8px; }
         .xterm { padding: 4px; }
@@ -43,6 +54,21 @@ HTML = r"""<!DOCTYPE html>
         @supports (padding-bottom: env(safe-area-inset-bottom)) {
             #terminal-container { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
         }
+
+        .status-bar {
+            display: none;
+            background: #1a1a1a;
+            border-top: 1px solid #333;
+            padding: 4px 10px;
+            font-size: 11px;
+            color: #888;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status-bar .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-bar .status-dot.connected { background: #00ff00; }
+        .status-bar .status-dot.disconnected { background: #ff4444; }
+        .status-bar .logout-btn { background: transparent; color: #888; border: 1px solid #555; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; width: auto; margin: 0; }
 
         .mobile-toolbar {
             display: none;
@@ -66,6 +92,19 @@ HTML = r"""<!DOCTYPE html>
         }
         .toolbar-btn:active { background: #555; }
 
+        .cdn-error {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #1e1e1e;
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+        .cdn-error p { color: #ff4444; font-size: 16px; }
+
         @media screen and (max-width: 768px) {
             .login-box { padding: 24px 20px; }
             .login-box h2 { font-size: 1.3rem; }
@@ -73,8 +112,13 @@ HTML = r"""<!DOCTYPE html>
             button { font-size: 16px; padding: 12px 16px; }
 
             .mobile-toolbar { display: flex; }
+            .status-bar { display: flex; }
 
             #terminal-container { padding: 4px; }
+        }
+
+        @media screen and (min-width: 769px) {
+            .status-bar { display: flex; }
         }
 
         @media screen and (max-width: 768px) and (orientation: landscape) {
@@ -87,12 +131,17 @@ HTML = r"""<!DOCTYPE html>
     </style>
 </head>
 <body>
+    <div id="cdn-error" class="cdn-error">
+        <div><p>Failed to load xterm.js from CDN. Please check your network connection.</p></div>
+    </div>
+
     <div id="login-interface" class="login-screen">
         <div class="login-box">
             <h2>Remote Shell</h2>
             <input type="text" id="user" placeholder="Username" autocomplete="off" autocapitalize="off"><br>
             <input type="password" id="pass" placeholder="Password"><br>
             <button onclick="login()">Connect</button>
+            <div id="login-error" class="login-error"></div>
         </div>
     </div>
 
@@ -107,14 +156,35 @@ HTML = r"""<!DOCTYPE html>
         <button class="toolbar-btn" onclick="clearTerminal()">Clear</button>
     </div>
 
+    <div class="status-bar" id="status-bar">
+        <span id="status-indicator"><span class="status-dot disconnected"></span>Disconnected</span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
     <script>
         let term, socket, token;
         const fitAddon = new FitAddon.FitAddon();
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
+        function setStatus(connected) {
+            const indicator = document.getElementById('status-indicator');
+            if (connected) {
+                indicator.innerHTML = '<span class="status-dot connected"></span>Connected';
+            } else {
+                indicator.innerHTML = '<span class="status-dot disconnected"></span>Disconnected';
+            }
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('login-error');
+            el.textContent = msg;
+            el.style.display = msg ? 'block' : 'none';
+        }
+
         function login() {
             const user = document.getElementById('user').value;
             const pass = document.getElementById('pass').value;
+            showError('');
             fetch('/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -124,8 +194,22 @@ HTML = r"""<!DOCTYPE html>
                     token = data.token;
                     document.getElementById('login-interface').style.display = 'none';
                     initShell();
-                } else alert('Unauthorized');
-            });
+                } else {
+                    showError(data.error || 'Login failed');
+                }
+            }).catch(() => showError('Network error'));
+        }
+
+        function logout() {
+            if (socket) {
+                socket.send(JSON.stringify({type: 'logout'}));
+                socket.close();
+            }
+            if (term) term.dispose();
+            token = null;
+            setStatus(false);
+            document.getElementById('login-interface').style.display = 'flex';
+            document.getElementById('terminal-container').innerHTML = '';
         }
 
         function sendKey(key) {
@@ -150,6 +234,13 @@ HTML = r"""<!DOCTYPE html>
             return { cols, rows };
         }
 
+        function notifyResize() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                const dims = getTerminalDimensions();
+                socket.send(JSON.stringify({type: 'resize', cols: dims.cols, rows: dims.rows}));
+            }
+        }
+
         function initShell() {
             const fontSize = isMobile ? 13 : 15;
 
@@ -171,10 +262,12 @@ HTML = r"""<!DOCTYPE html>
             term.loadAddon(new WebLinksAddon.WebLinksAddon());
             term.loadAddon(fitAddon);
             term.open(document.getElementById('terminal-container'));
-            fitAddon.fit();
+
+            // 延迟 fit 等 DOM 布局稳定
+            setTimeout(() => fitAddon.fit(), 50);
 
             const dims = getTerminalDimensions();
-            const wsUrl = `ws://${window.location.hostname}:5011?token=${token}&cols=${dims.cols}&rows=${dims.rows}`;
+            const wsUrl = `ws://${window.location.hostname}:WS_PORT_PLACEHOLDER?token=${token}&cols=${dims.cols}&rows=${dims.rows}`;
             socket = new WebSocket(wsUrl);
 
             socket.onmessage = (e) => term.write(e.data);
@@ -186,22 +279,40 @@ HTML = r"""<!DOCTYPE html>
             });
 
             socket.onopen = () => {
+                setStatus(true);
                 term.write('\x1b[1;32m[CONNECTED]\x1b[0m\r\n');
                 if (isMobile) {
                     term.write('\x1b[33m[Mobile Mode] Use toolbar for shortcuts\x1b[0m\r\n');
                 }
             };
 
+            socket.onclose = () => {
+                setStatus(false);
+                term.write('\x1b[1;31m[DISCONNECTED]\x1b[0m\r\n');
+            };
+
+            socket.onerror = () => {
+                setStatus(false);
+            };
+
+            // 窗口大小变化时同步 PTY 尺寸
+            let resizeTimer;
             window.addEventListener('resize', () => {
                 fitAddon.fit();
-                if (isMobile) {
-                    setTimeout(() => fitAddon.fit(), 100);
-                }
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    fitAddon.fit();
+                    notifyResize();
+                }, isMobile ? 300 : 150);
             });
 
             if (isMobile) {
                 window.visualViewport?.addEventListener('resize', () => {
-                    setTimeout(() => fitAddon.fit(), 200);
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(() => {
+                        fitAddon.fit();
+                        notifyResize();
+                    }, 300);
                 });
             }
 
@@ -211,7 +322,14 @@ HTML = r"""<!DOCTYPE html>
 </body>
 </html>"""
 
+# 在 HTML 中注入实际 WS 端口
+HTML = HTML.replace("WS_PORT_PLACEHOLDER", str(WS_PORT))
+
+
 class SimpleHandler(SimpleHTTPRequestHandler):
+    def log_message(self, format, *args):
+        pass  # 关闭 access log
+
     def do_GET(self):
         if self.path == '/':
             self.send_response(200)
@@ -223,18 +341,45 @@ class SimpleHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         if self.path == '/login':
+            ip = self.client_address[0]
+            now = time.time()
+
+            # 登录频率限制
+            if ip in login_attempts:
+                count, first = login_attempts[ip]
+                if now - first > LOGIN_WINDOW:
+                    count = 0
+                    login_attempts[ip] = (0, now)
+                elif count >= LOGIN_MAX_ATTEMPTS:
+                    self.send_json(429, {'success': False, 'error': 'Too many attempts, try later'})
+                    return
+            else:
+                login_attempts[ip] = (0, now)
+
             content_length = int(self.headers.get('Content-Length', 0))
             data = json.loads(self.rfile.read(content_length).decode())
+
             if data.get('username') == USERNAME and data.get('password') == PASSWORD:
                 token = secrets.token_hex(16)
-                terminals[token] = True
-                self.send_response(200)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'success': True, 'token': token}).encode())
+                terminals[token] = now
+
+                # 清理过期 token
+                expired = [t for t, ts in terminals.items() if now - ts > TOKEN_EXPIRE]
+                for t in expired:
+                    del terminals[t]
+
+                self.send_json(200, {'success': True, 'token': token})
             else:
-                self.send_response(401)
-                self.end_headers()
+                count, first = login_attempts[ip]
+                login_attempts[ip] = (count + 1, first)
+                self.send_json(401, {'success': False, 'error': 'Invalid credentials'})
+
+    def send_json(self, status, data):
+        self.send_response(status)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
+
 
 async def ws_handler(ws):
     query = parse_qs(urlparse(ws.path).query)
@@ -246,36 +391,74 @@ async def ws_handler(ws):
         await ws.close()
         return
 
+    # 检查 token 过期
+    if time.time() - terminals.get(token, 0) > TOKEN_EXPIRE:
+        terminals.pop(token, None)
+        await ws.close()
+        return
+
     env = os.environ.copy()
     env["TERM"] = "xterm-256color"
 
     proc = PtyProcess.spawn('cmd.exe', env=env, dimensions=(rows, cols))
     loop = asyncio.get_running_loop()
+    running = True
 
     def read_pty():
-        while True:
+        while running:
             try:
                 data = proc.read(4096)
                 if not data:
                     break
-                loop.call_soon_threadsafe(lambda d=data: asyncio.create_task(ws.send(d)))
-            except:
+                loop.call_soon_threadsafe(
+                    lambda d=data: asyncio.ensure_future(_safe_send(ws, d))
+                )
+            except Exception:
                 break
 
-    threading.Thread(target=read_pty, daemon=True).start()
+    async def _safe_send(ws, data):
+        try:
+            await ws.send(data)
+        except Exception:
+            pass
+
+    thread = threading.Thread(target=read_pty, daemon=True)
+    thread.start()
 
     try:
         async for msg in ws:
+            # 每次交互续期 token
+            if token in terminals:
+                terminals[token] = time.time()
+
+            # 检测 JSON 控制消息 (resize / logout)
+            if isinstance(msg, str) and msg.startswith('{'):
+                try:
+                    ctrl = json.loads(msg)
+                    if ctrl.get('type') == 'resize':
+                        new_cols = ctrl.get('cols', cols)
+                        new_rows = ctrl.get('rows', rows)
+                        proc.setwinsize(new_rows, new_cols)
+                        cols, rows = new_cols, new_rows
+                        continue
+                    elif ctrl.get('type') == 'logout':
+                        break
+                except (json.JSONDecodeError, ValueError):
+                    pass
             proc.write(msg)
     finally:
+        running = False
         proc.terminate()
+        terminals.pop(token, None)
+
 
 async def main():
-    async with serve(ws_handler, "0.0.0.0", 5011):
-        server = HTTPServer(("0.0.0.0", 5010), SimpleHandler)
-        print("Remote Shell Ready: http://home.coopez.cn:5010")
+    async with serve(ws_handler, "0.0.0.0", WS_PORT):
+        server = HTTPServer(("0.0.0.0", HTTP_PORT), SimpleHandler)
+        print(f"Remote Shell Ready: http://{socket.gethostname()}:{HTTP_PORT}")
         threading.Thread(target=server.serve_forever, daemon=True).start()
         await asyncio.Event().wait()
+
 
 if __name__ == '__main__':
     asyncio.run(main())
