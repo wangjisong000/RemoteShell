@@ -591,18 +591,27 @@ HTML = r"""<!DOCTYPE html>
             let composing = false;
 
             term.onData(data => {
-                if (socket && socket.readyState === WebSocket.OPEN && !composing) {
+                if (composing) return;
+                try { if (term._core._compositionHelper?._isComposing) return; } catch (_) {}
+                if (socket && socket.readyState === WebSocket.OPEN) {
                     socket.send(data);
                 }
             });
 
-            // 在 xterm.js 自己的 textarea 上监听 IME, 比 document 级别更可靠
             const textarea = term.textarea;
             if (textarea) {
-                textarea.addEventListener('compositionstart', () => { composing = true; });
-                textarea.addEventListener('compositionend', () => { composing = false; });
+                const mark = () => { composing = true; };
+                const clear = () => { composing = false; };
+                textarea.addEventListener('beforeinput', (e) => {
+                    if (e.inputType === 'insertCompositionText' || e.isComposing) mark();
+                });
+                // 移动端兜底: input 事件在 IME 期间 isComposing 为 true, 普通输入为 false
+                textarea.addEventListener('input', (e) => {
+                    if (e.isComposing) mark();
+                });
+                textarea.addEventListener('compositionstart', mark);
+                textarea.addEventListener('compositionend', clear);
             }
-            // 兜底: 某些浏览器 composition 事件可能不冒泡到 textarea 监听器
             document.addEventListener('compositionstart', () => { composing = true; });
             document.addEventListener('compositionend', () => { composing = false; });
 
