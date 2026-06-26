@@ -174,7 +174,7 @@ HTML = r"""<!DOCTYPE html>
             fitAddon.fit();
 
             const dims = getTerminalDimensions();
-            const wsUrl = `ws://${window.location.hostname}:5001?token=${token}&cols=${dims.cols}&rows=${dims.rows}`;
+            const wsUrl = `ws://${window.location.hostname}:5011?token=${token}&cols=${dims.cols}&rows=${dims.rows}`;
             socket = new WebSocket(wsUrl);
 
             socket.onmessage = (e) => term.write(e.data);
@@ -271,9 +271,9 @@ async def ws_handler(ws):
         proc.terminate()
 
 async def main():
-    async with serve(ws_handler, "0.0.0.0", 5001):
-        server = HTTPServer(("0.0.0.0", 5000), SimpleHandler)
-        print("Remote Shell Ready: http://home.coopez.cn:5000")
+    async with serve(ws_handler, "0.0.0.0", 5011):
+        server = HTTPServer(("0.0.0.0", 5010), SimpleHandler)
+        print("Remote Shell Ready: http://home.coopez.cn:5010")
         threading.Thread(target=server.serve_forever, daemon=True).start()
         await asyncio.Event().wait()
 
