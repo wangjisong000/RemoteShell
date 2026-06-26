@@ -1,4 +1,5 @@
 import asyncio
+import functools
 import json
 import logging
 import os
@@ -6,6 +7,7 @@ import socket
 import threading
 import time
 import secrets
+import uuid
 from urllib.parse import urlparse, parse_qs
 from flask import Flask, request, jsonify, session
 from websockets import serve
@@ -19,12 +21,15 @@ HTTP_PORT = int(os.environ.get("RS_HTTP_PORT", "5010"))
 WS_PORT = int(os.environ.get("RS_WS_PORT", "5011"))
 ACCESS_TOKEN = os.environ.get("RS_ACCESS_TOKEN", "remote_shell_2026")
 SECRET_KEY = os.environ.get("RS_SECRET_KEY", secrets.token_hex(32))
-TOKEN_EXPIRE = 86400  # token 有效期 24 小时，每次交互自动续期
+TOKEN_EXPIRE = 86400  # token 有效期 24 小时
 LOGIN_MAX_ATTEMPTS = 5
 LOGIN_WINDOW = 600  # 10 分钟内
+HISTORY_MAX = 256 * 1024  # 每个 PTY 的历史缓冲 256KB
 
-sessions = {}        # token -> {'proc': PtyProcess|None, 'ts': float}
-login_attempts = {}  # ip -> (count, first_attempt_time)
+sessions = {}         # token -> {'ts': float}
+pty_sessions = {}     # pty_id -> PTY dict (全局, 单用户场景)
+pty_lock = threading.Lock()
+login_attempts = {}   # ip -> (count, first_attempt_time)
 
 HTML = r"""<!DOCTYPE html>
 <html>
@@ -52,6 +57,64 @@ HTML = r"""<!DOCTYPE html>
         button:active { background: #0056b3; }
         .login-error { color: #ff4444; font-size: 14px; margin-top: 10px; display: none; }
 
+        #main-area { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+
+        /* Tab 栏 */
+        #tab-bar {
+            display: flex;
+            align-items: stretch;
+            background: #141414;
+            border-bottom: 1px solid #333;
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-shrink: 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            min-height: 34px;
+        }
+        #tab-bar::-webkit-scrollbar { display: none; }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            font-size: 13px;
+            color: #888;
+            background: #1a1a1a;
+            border-right: 1px solid #333;
+            cursor: pointer;
+            white-space: nowrap;
+            user-select: none;
+            -webkit-user-select: none;
+            flex-shrink: 0;
+            transition: background 0.15s;
+        }
+        .tab:hover { background: #252525; color: #ccc; }
+        .tab.active { background: #000; color: #00ff00; border-bottom: 2px solid #00ff00; }
+
+        .tab-title { pointer-events: none; }
+        .tab-close {
+            font-size: 15px;
+            line-height: 1;
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: #666;
+            pointer-events: auto;
+        }
+        .tab-close:hover { background: #444; color: #ff4444; }
+
+        .tab-add {
+            padding: 6px 16px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #00ff00;
+            cursor: pointer;
+            border-right: none;
+            background: transparent;
+        }
+        .tab-add:hover { background: #1a3a1a; }
+
         #terminal-container { flex: 1; padding: 8px; }
         .xterm { padding: 4px; }
 
@@ -68,6 +131,7 @@ HTML = r"""<!DOCTYPE html>
             color: #888;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
         .status-bar .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
         .status-bar .status-dot.connected { background: #00ff00; }
@@ -157,6 +221,11 @@ HTML = r"""<!DOCTYPE html>
             .toolbar-toggle { display: flex; }
             .status-bar { display: flex; }
 
+            #tab-bar { min-height: 38px; }
+            .tab { padding: 8px 12px; font-size: 13px; }
+            .tab-close { font-size: 16px; padding: 3px 5px; }
+            .tab-add { padding: 8px 14px; font-size: 20px; }
+
             #terminal-container { padding: 4px; }
         }
 
@@ -167,6 +236,8 @@ HTML = r"""<!DOCTYPE html>
         @media screen and (max-width: 768px) and (orientation: landscape) {
             .login-screen { flex-direction: row; }
             .login-box { max-width: 280px; padding: 20px; }
+            #tab-bar { min-height: 30px; }
+            .tab { padding: 4px 10px; font-size: 12px; }
         }
 
         * { -webkit-tap-highlight-color: transparent; }
@@ -188,7 +259,10 @@ HTML = r"""<!DOCTYPE html>
         </div>
     </div>
 
-    <div id="terminal-container"></div>
+    <div id="main-area">
+        <div id="tab-bar"></div>
+        <div id="terminal-container"></div>
+    </div>
 
     <button class="toolbar-toggle" id="toolbar-toggle"
         ontouchstart="event.stopPropagation()"
@@ -212,7 +286,10 @@ HTML = r"""<!DOCTYPE html>
 
     <script>
         const ACCESS_TOKEN = "ACCESS_TOKEN_PLACEHOLDER";
+        const WS_PORT = WS_PORT_PLACEHOLDER;
         let term, socket, token;
+        let currentPtyId = null;
+        let ptyList = [];
         const fitAddon = new FitAddon.FitAddon();
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -249,6 +326,7 @@ HTML = r"""<!DOCTYPE html>
         function showLogin() {
             deleteCookie('rs_token');
             token = null;
+            document.getElementById('main-area').style.display = 'none';
             document.getElementById('login-interface').style.display = 'flex';
         }
 
@@ -265,7 +343,8 @@ HTML = r"""<!DOCTYPE html>
                     token = data.token;
                     setCookie('rs_token', token, 1);
                     document.getElementById('login-interface').style.display = 'none';
-                    initShell();
+                    document.getElementById('main-area').style.display = 'flex';
+                    enterWorkspace();
                 } else {
                     showError(data.error || 'Login failed');
                 }
@@ -274,16 +353,147 @@ HTML = r"""<!DOCTYPE html>
 
         function logout() {
             if (socket) {
-                socket.send(JSON.stringify({type: 'logout'}));
-                socket.close();
+                try { socket.close(); } catch(e) {}
+                socket = null;
             }
-            if (term) term.dispose();
+            if (term) { term.dispose(); term = null; }
             deleteCookie('rs_token');
             token = null;
+            currentPtyId = null;
+            ptyList = [];
+            document.getElementById('tab-bar').innerHTML = '';
             setStatus(false);
+            document.getElementById('main-area').style.display = 'none';
             document.getElementById('login-interface').style.display = 'flex';
             document.getElementById('terminal-container').innerHTML = '';
         }
+
+        // --- Tab 管理 ---
+
+        function renderTabs() {
+            const tabBar = document.getElementById('tab-bar');
+            tabBar.innerHTML = '';
+            ptyList.forEach(pty => {
+                const tab = document.createElement('div');
+                tab.className = 'tab' + (pty.id === currentPtyId ? ' active' : '');
+                tab.innerHTML = '<span class="tab-title">' + escHtml(pty.title) + '</span>' +
+                    '<span class="tab-close" data-id="' + pty.id + '">&times;</span>';
+                tab.addEventListener('click', () => switchPty(pty.id));
+                tab.querySelector('.tab-close').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    closePty(pty.id);
+                });
+                tabBar.appendChild(tab);
+            });
+            const addBtn = document.createElement('div');
+            addBtn.className = 'tab tab-add';
+            addBtn.textContent = '+';
+            addBtn.title = 'New Terminal';
+            addBtn.addEventListener('click', createPty);
+            tabBar.appendChild(addBtn);
+        }
+
+        function escHtml(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        async function createPty() {
+            const resp = await fetch('/pty/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({token: token})
+            });
+            const data = await resp.json();
+            if (data.pty_id) {
+                ptyList.push({id: data.pty_id, title: data.title});
+                switchPty(data.pty_id);
+            }
+        }
+
+        async function closePty(ptyId) {
+            if (ptyList.length <= 1) {
+                if (!confirm('Close the last terminal? You can create a new one.')) return;
+            }
+            await fetch('/pty/' + ptyId + '?token=' + encodeURIComponent(token), { method: 'DELETE' });
+            ptyList = ptyList.filter(p => p.id !== ptyId);
+            if (currentPtyId === ptyId) {
+                const next = ptyList[0];
+                if (next) {
+                    switchPty(next.id);
+                } else {
+                    // 所有 PTY 已关闭, 自动创建新的
+                    await createPty();
+                }
+            } else {
+                renderTabs();
+            }
+        }
+
+        function switchPty(ptyId) {
+            if (ptyId === currentPtyId) return;
+            // 断开当前 WebSocket (静默, 不触发 onclose 提示)
+            if (socket) {
+                socket.onclose = null;
+                socket.onerror = null;
+                try { socket.close(); } catch(e) {}
+                socket = null;
+            }
+            currentPtyId = ptyId;
+            renderTabs();
+            if (term) term.reset();
+            connectPty(ptyId);
+        }
+
+        function connectPty(ptyId) {
+            const dims = getTerminalDimensions();
+            const wsUrl = 'ws://' + window.location.hostname + ':' + WS_PORT +
+                '?key=' + encodeURIComponent(ACCESS_TOKEN) +
+                '&token=' + encodeURIComponent(token) +
+                '&pty_id=' + encodeURIComponent(ptyId) +
+                '&cols=' + dims.cols + '&rows=' + dims.rows;
+            socket = new WebSocket(wsUrl);
+
+            socket.onmessage = (e) => {
+                if (typeof e.data === 'string' && e.data.startsWith('{')) {
+                    try {
+                        const msg = JSON.parse(e.data);
+                        if (msg.type === 'reconnected') {
+                            term.write('\x1b[1;33m[RECONNECTED]\x1b[0m\r\n');
+                            return;
+                        }
+                        if (msg.type === 'pty_exited') {
+                            term.write('\x1b[1;31m[Process exited]\x1b[0m\r\n');
+                            return;
+                        }
+                    } catch (_) {}
+                }
+                term.write(e.data);
+            };
+
+            let wsOpened = false;
+
+            socket.onopen = () => {
+                wsOpened = true;
+                setStatus(true);
+                term.write('\x1b[1;32m[CONNECTED]\x1b[0m\r\n');
+                if (isMobile) {
+                    term.write('\x1b[33m[Mobile Mode]\x1b[0m\r\n');
+                }
+            };
+
+            socket.onclose = () => {
+                setStatus(false);
+                if (!wsOpened) {
+                    showLogin();
+                } else {
+                    term.write('\x1b[1;31m[DISCONNECTED]\x1b[0m\r\n');
+                }
+            };
+
+            socket.onerror = () => setStatus(false);
+        }
+
+        // --- 终端操作 ---
 
         function sendKey(key) {
             if (socket && socket.readyState === WebSocket.OPEN) {
@@ -304,7 +514,6 @@ HTML = r"""<!DOCTYPE html>
             const isOpen = toolbar.classList.toggle('open');
             toggle.textContent = isOpen ? '✕' : '⌨';
             toggle.classList.toggle('shifted', isOpen);
-            // 打开工具栏时让终端失焦，避免键盘弹出
             if (isOpen && term) term.blur();
         }
 
@@ -326,16 +535,13 @@ HTML = r"""<!DOCTYPE html>
             }
         }
 
-        function initShell() {
-            const fontSize = isMobile ? 13 : 15;
+        // --- 初始化 ---
 
+        function initTerminal() {
+            const fontSize = isMobile ? 13 : 15;
             term = new Terminal({
                 cursorBlink: true,
-                theme: {
-                    background: '#000000',
-                    foreground: '#ffffff',
-                    cursor: '#00ff00'
-                },
+                theme: { background: '#000000', foreground: '#ffffff', cursor: '#00ff00' },
                 fontSize: fontSize,
                 fontFamily: '"Cascadia Code", "Consolas", "Monaco", monospace',
                 letterSpacing: 0,
@@ -343,84 +549,32 @@ HTML = r"""<!DOCTYPE html>
                 allowProposedApi: true,
                 scrollback: 1000
             });
-
             term.loadAddon(new WebLinksAddon.WebLinksAddon());
             term.loadAddon(fitAddon);
             term.open(document.getElementById('terminal-container'));
-
-            // 延迟 fit 等 DOM 布局稳定
             setTimeout(() => fitAddon.fit(), 50);
 
-            const dims = getTerminalDimensions();
-            const wsUrl = `ws://${window.location.hostname}:WS_PORT_PLACEHOLDER?token=${token}&key=${encodeURIComponent(ACCESS_TOKEN)}&cols=${dims.cols}&rows=${dims.rows}`;
-            socket = new WebSocket(wsUrl);
-
-            socket.onmessage = (e) => {
-                if (typeof e.data === 'string' && e.data.startsWith('{')) {
-                    try {
-                        const msg = JSON.parse(e.data);
-                        if (msg.type === 'reconnected') {
-                            term.write('\x1b[1;33m[RECONNECTED]\x1b[0m\r\n');
-                            return;
-                        }
-                    } catch (_) {}
-                }
-                term.write(e.data);
-            };
-
             term.onData(data => {
-                if (socket.readyState === WebSocket.OPEN) {
+                if (socket && socket.readyState === WebSocket.OPEN) {
                     socket.send(data);
                 }
             });
 
-            let wsOpened = false;
-
-            socket.onopen = () => {
-                wsOpened = true;
-                setStatus(true);
-                term.write('\x1b[1;32m[CONNECTED]\x1b[0m\r\n');
-                if (isMobile) {
-                    term.write('\x1b[33m[Mobile Mode] Use toolbar for shortcuts\x1b[0m\r\n');
-                }
-            };
-
-            socket.onclose = () => {
-                setStatus(false);
-                if (!wsOpened) {
-                    // 认证失败，退回登录页
-                    showLogin();
-                } else {
-                    term.write('\x1b[1;31m[DISCONNECTED]\x1b[0m\r\n');
-                }
-            };
-
-            socket.onerror = () => {
-                setStatus(false);
-            };
-
-            // 窗口大小变化时同步 PTY 尺寸
+            // resize 事件
             let resizeTimer;
             window.addEventListener('resize', () => {
                 fitAddon.fit();
                 clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(() => {
-                    fitAddon.fit();
-                    notifyResize();
-                }, isMobile ? 300 : 150);
+                resizeTimer = setTimeout(() => { fitAddon.fit(); notifyResize(); }, isMobile ? 300 : 150);
             });
-
             if (isMobile) {
                 window.visualViewport?.addEventListener('resize', () => {
                     clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(() => {
-                        fitAddon.fit();
-                        notifyResize();
-                    }, 300);
+                    resizeTimer = setTimeout(() => { fitAddon.fit(); notifyResize(); }, 300);
                 });
             }
 
-            // 点击终端区域时关闭工具栏
+            // 点击终端区域关闭工具栏
             document.getElementById('terminal-container').addEventListener('click', () => {
                 const toolbar = document.getElementById('toolbar');
                 if (toolbar.classList.contains('open')) {
@@ -433,7 +587,29 @@ HTML = r"""<!DOCTYPE html>
             term.focus();
         }
 
-        // 页面加载时自动恢复会话
+        async function enterWorkspace() {
+            initTerminal();
+            // 获取已有 PTY 列表
+            try {
+                const resp = await fetch('/pty/list?token=' + encodeURIComponent(token));
+                const data = await resp.json();
+                ptyList = data.ptys || [];
+            } catch(e) {
+                ptyList = [];
+            }
+
+            if (ptyList.length > 0) {
+                // 有已有 PTY, 渲染 tab 栏, 连第一个
+                currentPtyId = ptyList[0].id;
+                renderTabs();
+                connectPty(currentPtyId);
+            } else {
+                // 无 PTY, 自动创建
+                await createPty();
+            }
+        }
+
+        // 页面加载: Cookie 有 token → 验证 → 直接进 workspace
         window.addEventListener('DOMContentLoaded', () => {
             const savedToken = getCookie('rs_token');
             if (!savedToken) return;
@@ -446,7 +622,8 @@ HTML = r"""<!DOCTYPE html>
                 if (data.valid) {
                     token = savedToken;
                     document.getElementById('login-interface').style.display = 'none';
-                    initShell();
+                    document.getElementById('main-area').style.display = 'flex';
+                    enterWorkspace();
                 } else {
                     deleteCookie('rs_token');
                 }
@@ -456,11 +633,10 @@ HTML = r"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# 在 HTML 中注入实际 WS 端口和 Access Token
+# 注入实际 WS 端口和 Access Token
 HTML = HTML.replace("WS_PORT_PLACEHOLDER", str(WS_PORT))
 HTML = HTML.replace("ACCESS_TOKEN_PLACEHOLDER", ACCESS_TOKEN)
 
-# 不屏蔽 Werkzeug 日志，保留 reload 通知可见
 logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
@@ -486,7 +662,6 @@ def login():
     ip = request.remote_addr
     now = time.time()
 
-    # 登录频率限制
     if ip in login_attempts:
         count, first = login_attempts[ip]
         if now - first > LOGIN_WINDOW:
@@ -500,15 +675,7 @@ def login():
     data = request.get_json(silent=True) or {}
     if data.get('username') == USERNAME and data.get('password') == PASSWORD:
         token = secrets.token_hex(16)
-        sessions[token] = {'proc': None, 'ts': now}
-
-        # 清理过期 session（终止 PTY + 删除）
-        expired = [t for t, s in sessions.items() if now - s['ts'] > TOKEN_EXPIRE]
-        for t in expired:
-            if sessions[t]['proc']:
-                sessions[t]['proc'].terminate()
-            del sessions[t]
-
+        sessions[token] = {'ts': now}
         return jsonify({'success': True, 'token': token})
     else:
         count, first = login_attempts[ip]
@@ -526,107 +693,265 @@ def verify():
     return jsonify({'valid': False}), 401
 
 
+@app.route('/pty/list')
+def pty_list():
+    token = request.args.get('token')
+    if not token or token not in sessions:
+        return jsonify({'ptys': []}), 401
+    now = time.time()
+    sessions[token]['ts'] = now
+    ptys = []
+    for pid, pty in pty_sessions.items():
+        ptys.append({
+            'id': pid,
+            'title': pty['title'],
+            'created_at': pty['created_at'],
+            'subscriber_count': len(pty['subscribers']),
+        })
+    ptys.sort(key=lambda p: p['created_at'])
+    return jsonify({'ptys': ptys})
+
+
+@app.route('/pty/create', methods=['POST'])
+def pty_create():
+    data = request.get_json(silent=True) or {}
+    token = data.get('token') or request.args.get('token')
+    if not token or token not in sessions:
+        return jsonify({'error': 'Unauthorized'}), 401
+    pty_id = uuid.uuid4().hex[:8]
+    count = len([p for p in pty_sessions.values() if p['token'] == token]) + 1
+    pty_sessions[pty_id] = {
+        'id': pty_id,
+        'token': token,
+        'title': 'Shell ' + str(count),
+        'created_at': time.time(),
+        'proc': None,
+        'cols': 80,
+        'rows': 24,
+        'subscribers': set(),
+        'history': '',
+        'loop': None,
+    }
+    sessions[token]['ts'] = time.time()
+    return jsonify({'pty_id': pty_id, 'title': pty_sessions[pty_id]['title']})
+
+
+@app.route('/pty/<pty_id>', methods=['DELETE'])
+def pty_delete(pty_id):
+    token = request.args.get('token')
+    if not token or token not in sessions:
+        return jsonify({'error': 'Unauthorized'}), 401
+    pty = pty_sessions.get(pty_id)
+    if not pty:
+        return jsonify({'error': 'Not found'}), 404
+    # 通知所有 subscribers 断开
+    for ws in list(pty['subscribers']):
+        try:
+            pty['loop'].call_soon_threadsafe(
+                lambda w=ws: asyncio.ensure_future(_safe_send(w, '{"type":"pty_closed"}'))
+            )
+        except Exception:
+            pass
+    if pty['proc']:
+        try:
+            pty['proc'].terminate()
+        except Exception:
+            pass
+    pty_sessions.pop(pty_id, None)
+    return jsonify({'success': True})
+
+
+async def _safe_send(ws, data):
+    try:
+        await ws.send(data)
+    except Exception:
+        pass
+
+
+def broadcast_to_subscribers(pty_id, data):
+    """从 reader 线程调用, 向 PTY 的所有 subscribers 广播输出"""
+    pty = pty_sessions.get(pty_id)
+    if not pty or not pty['subscribers']:
+        return
+    loop = pty.get('loop')
+    if not loop:
+        return
+    for ws in list(pty['subscribers']):
+        try:
+            loop.call_soon_threadsafe(
+                functools.partial(_schedule_send, ws, data)
+            )
+        except Exception:
+            pty['subscribers'].discard(ws)
+
+
+def _schedule_send(ws, data):
+    asyncio.ensure_future(_safe_send(ws, data))
+
+
+def start_pty_reader(pty_id):
+    """为 PTY 启动独立的 reader 线程"""
+    pty = pty_sessions[pty_id]
+
+    def read_pty():
+        while True:
+            try:
+                buf = pty['proc'].read(4096)
+                if not buf:
+                    break
+                # 追加历史
+                pty['history'] = (pty['history'] + buf)[-HISTORY_MAX:]
+                # 广播给所有 subscribers
+                broadcast_to_subscribers(pty_id, buf)
+            except Exception:
+                break
+        # 进程退出
+        pty['proc'] = None
+        loop = pty.get('loop')
+        if loop:
+            for ws in list(pty['subscribers']):
+                try:
+                    loop.call_soon_threadsafe(
+                        lambda w=ws: asyncio.ensure_future(
+                            _safe_send(w, '{"type":"pty_exited"}')
+                        )
+                    )
+                except Exception:
+                    pass
+
+    threading.Thread(target=read_pty, daemon=True).start()
+
+
 async def ws_handler(ws):
-    query = parse_qs(urlparse(ws.request.path).query)
+    try:
+        query = parse_qs(urlparse(ws.request.path).query)
+    except Exception as e:
+        logging.error(f"WS parse query failed: {e}")
+        await ws.close()
+        return
     key = query.get('key', [None])[0]
     token = query.get('token', [None])[0]
+    pty_id = query.get('pty_id', [None])[0]
     cols = int(query.get('cols', [80])[0])
     rows = int(query.get('rows', [24])[0])
 
-    # 校验 access token
     if key != ACCESS_TOKEN:
+        logging.warning(f"WS bad key: {key}")
         await ws.close()
         return
-
     if not token or token not in sessions:
+        logging.warning(f"WS bad token: {token}")
         await ws.close()
         return
-
-    # 检查 token 过期
     if time.time() - sessions[token]['ts'] > TOKEN_EXPIRE:
-        if sessions[token]['proc']:
-            sessions[token]['proc'].terminate()
         del sessions[token]
         await ws.close()
         return
 
-    env = os.environ.copy()
-    env["TERM"] = "xterm-256color"
+    # 续期
+    sessions[token]['ts'] = time.time()
 
-    # 复用已有 PTY 还是新建
-    session = sessions[token]
-    reconnected = session['proc'] is not None
-    if reconnected:
-        proc = session['proc']
-        await ws.send('{"type":"reconnected"}')
-    else:
-        proc = PtyProcess.spawn('cmd.exe', env=env, dimensions=(rows, cols))
-        session['proc'] = proc
+    # 处理 pty_id
+    if not pty_id or pty_id == 'new':
+        logging.warning(f"WS invalid pty_id: {pty_id!r}")
+        await ws.close()
+        return
 
-    loop = asyncio.get_running_loop()
-    running = True
+    if pty_id not in pty_sessions:
+        logging.warning(f"WS pty_id not found: {pty_id!r}")
+        await ws.close()
+        return
 
-    def read_pty():
-        while running:
-            try:
-                data = proc.read(4096)
-                if not data:
-                    break
-                loop.call_soon_threadsafe(
-                    lambda d=data: asyncio.ensure_future(_safe_send(ws, d))
-                )
-            except Exception:
-                break
-
-    async def _safe_send(ws, data):
-        try:
-            await ws.send(data)
-        except Exception:
-            pass
-
-    thread = threading.Thread(target=read_pty, daemon=True)
-    thread.start()
+    pty = pty_sessions[pty_id]
+    logging.info(f"WS connect: pty_id={pty_id!r} cols={cols} rows={rows} subs={len(pty['subscribers'])}")
 
     try:
-        async for msg in ws:
-            # 每次交互续期
-            session['ts'] = time.time()
+        # 首次连接: spawn PTY + 启动 reader
+        with pty_lock:
+            if pty['proc'] is None:
+                env = os.environ.copy()
+                env["TERM"] = "xterm-256color"
+                logging.info(f"Spawning cmd.exe for pty {pty_id}")
+                proc = PtyProcess.spawn('cmd.exe', env=env, dimensions=(rows, cols))
+                pty['proc'] = proc
+                pty['cols'] = cols
+                pty['rows'] = rows
+                pty['loop'] = asyncio.get_running_loop()
+                start_pty_reader(pty_id)
 
-            # 检测 JSON 控制消息 (resize / logout)
-            if isinstance(msg, str) and msg.startswith('{'):
+        # 发送历史回放 (仅此新 subscriber), 过滤 DA 查询避免终端响应循环
+        if pty['history']:
+            clean = pty['history'].replace('\x1b[c', '')
+            await _safe_send(ws, clean)
+
+        # 注册 subscriber
+        pty['subscribers'].add(ws)
+
+        reconnected = len(pty['subscribers']) > 1
+        if reconnected:
+            await _safe_send(ws, '{"type":"reconnected"}')
+
+        # 对齐终端尺寸
+        if cols != pty['cols'] or rows != pty['rows']:
+            try:
+                pty['proc'].setwinsize(rows, cols)
+                pty['cols'] = cols
+                pty['rows'] = rows
+            except Exception:
+                pass
+
+        try:
+            async for msg in ws:
+                sessions[token]['ts'] = time.time()
+
+                if isinstance(msg, str) and msg.startswith('{'):
+                    try:
+                        ctrl = json.loads(msg)
+                        if ctrl.get('type') == 'resize':
+                            nc = ctrl.get('cols', cols)
+                            nr = ctrl.get('rows', rows)
+                            try:
+                                pty['proc'].setwinsize(nr, nc)
+                            except Exception:
+                                pass
+                            pty['cols'] = nc
+                            pty['rows'] = nr
+                            continue
+                        elif ctrl.get('type') == 'logout':
+                            break
+                    except (json.JSONDecodeError, ValueError):
+                        pass
+
                 try:
-                    ctrl = json.loads(msg)
-                    if ctrl.get('type') == 'resize':
-                        new_cols = ctrl.get('cols', cols)
-                        new_rows = ctrl.get('rows', rows)
-                        proc.setwinsize(new_rows, new_cols)
-                        cols, rows = new_cols, new_rows
-                        continue
-                    elif ctrl.get('type') == 'logout':
-                        running = False
-                        proc.terminate()
-                        session['proc'] = None
-                        del sessions[token]
-                        break
-                except (json.JSONDecodeError, ValueError):
-                    pass
-            proc.write(msg)
-    except ConnectionClosed:
-        pass
+                    pty['proc'].write(msg)
+                except Exception:
+                    break
+        except ConnectionClosed:
+            pass
+    except Exception as e:
+        logging.error(f"WS handler error for pty {pty_id}: {e}", exc_info=True)
     finally:
-        running = False
-        # PTY 保留，刷新页面后重连同一个终端
+        pty['subscribers'].discard(ws)
+        logging.info(f"WS disconnect: pty_id={pty_id!r} subs={len(pty['subscribers'])}")
 
 
 def cleanup_sessions():
     while True:
-        time.sleep(3600)  # 每小时清理一次
+        time.sleep(3600)
         now = time.time()
-        expired = [t for t, s in sessions.items() if now - s['ts'] > TOKEN_EXPIRE]
-        for t in expired:
-            if sessions[t]['proc']:
-                sessions[t]['proc'].terminate()
-            del sessions[t]
+        expired_tokens = [t for t, s in sessions.items() if now - s['ts'] > TOKEN_EXPIRE]
+        for t in expired_tokens:
+            # 清理该 token 的所有 PTY
+            for pid in list(pty_sessions.keys()):
+                pty = pty_sessions[pid]
+                if pty['token'] == t:
+                    if pty['proc']:
+                        try:
+                            pty['proc'].terminate()
+                        except Exception:
+                            pass
+                    pty_sessions.pop(pid, None)
+            sessions.pop(t, None)
 
 
 def start_ws_server():
@@ -639,7 +964,6 @@ def start_ws_server():
 
 if __name__ == '__main__':
     if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-        # 子进程：启动 WebSocket（Flask 由下面的 app.run 接管）
         print(f"Remote Shell Ready: http://{socket.gethostname()}:{HTTP_PORT}/?token={ACCESS_TOKEN}")
         threading.Thread(target=start_ws_server, daemon=True).start()
 
