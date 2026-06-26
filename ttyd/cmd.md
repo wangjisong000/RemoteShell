@@ -1,0 +1,1 @@
+./ttyd/ttyd.exe -p 8080 -W -w C:\ cmd
