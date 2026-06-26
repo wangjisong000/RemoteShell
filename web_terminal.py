@@ -248,7 +248,11 @@ HTML = r"""<!DOCTYPE html>
     <div id="cdn-error" class="cdn-error">
         <div><p>Failed to load xterm.js from CDN. Please check your network connection.</p></div>
     </div>
-
+    
+    <div class="status-bar" id="status-bar">
+        <span id="status-indicator"><span class="status-dot disconnected"></span>Disconnected</span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
     <div id="login-interface" class="login-screen">
         <div class="login-box">
             <h2>Remote Shell</h2>
@@ -279,10 +283,6 @@ HTML = r"""<!DOCTYPE html>
         <button class="toolbar-btn" onclick="clearTerminal()">Clear</button>
     </div>
 
-    <div class="status-bar" id="status-bar">
-        <span id="status-indicator"><span class="status-dot disconnected"></span>Disconnected</span>
-        <button class="logout-btn" onclick="logout()">Logout</button>
-    </div>
 
     <script>
         const ACCESS_TOKEN = "ACCESS_TOKEN_PLACEHOLDER";
@@ -457,10 +457,6 @@ HTML = r"""<!DOCTYPE html>
                 if (typeof e.data === 'string' && e.data.startsWith('{')) {
                     try {
                         const msg = JSON.parse(e.data);
-                        if (msg.type === 'reconnected') {
-                            term.write('\x1b[1;33m[RECONNECTED]\x1b[0m\r\n');
-                            return;
-                        }
                         if (msg.type === 'pty_exited') {
                             term.write('\x1b[1;31m[Process exited]\x1b[0m\r\n');
                             return;
@@ -475,10 +471,6 @@ HTML = r"""<!DOCTYPE html>
             socket.onopen = () => {
                 wsOpened = true;
                 setStatus(true);
-                term.write('\x1b[1;32m[CONNECTED]\x1b[0m\r\n');
-                if (isMobile) {
-                    term.write('\x1b[33m[Mobile Mode]\x1b[0m\r\n');
-                }
             };
 
             socket.onclose = () => {
@@ -886,10 +878,6 @@ async def ws_handler(ws):
 
         # 注册 subscriber
         pty['subscribers'].add(ws)
-
-        reconnected = len(pty['subscribers']) > 1
-        if reconnected:
-            await _safe_send(ws, '{"type":"reconnected"}')
 
         # 对齐终端尺寸
         if cols != pty['cols'] or rows != pty['rows']:
