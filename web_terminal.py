@@ -7,15 +7,17 @@ import threading
 import time
 import secrets
 from urllib.parse import urlparse, parse_qs
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session
 from websockets import serve
 from winpty import PtyProcess
 
 # --- 配置 ---
 USERNAME = os.environ.get("RS_USER", "admin")
-PASSWORD = os.environ.get("RS_PASS", "123456")
+PASSWORD = os.environ.get("RS_PASS", "admin123456")
 HTTP_PORT = int(os.environ.get("RS_HTTP_PORT", "5010"))
 WS_PORT = int(os.environ.get("RS_WS_PORT", "5011"))
+ACCESS_TOKEN = os.environ.get("RS_ACCESS_TOKEN", "remote_shell_2026")
+SECRET_KEY = os.environ.get("RS_SECRET_KEY", secrets.token_hex(32))
 TOKEN_EXPIRE = 86400  # token 有效期 24 小时，每次交互自动续期
 LOGIN_MAX_ATTEMPTS = 5
 LOGIN_WINDOW = 600  # 10 分钟内
@@ -30,7 +32,7 @@ HTML = r"""<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Remote Shell</title>
+    <title>Remote Shell v4</title>
     <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"
         onerror="document.getElementById('cdn-error').style.display='block'"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
@@ -72,13 +74,52 @@ HTML = r"""<!DOCTYPE html>
         .status-bar .logout-btn { background: transparent; color: #888; border: 1px solid #555; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; width: auto; margin: 0; }
 
         .mobile-toolbar {
-            display: none;
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 60;
             background: #1a1a1a;
             border-top: 1px solid #333;
-            padding: 8px;
+            padding: 10px 8px;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
             gap: 8px;
             flex-wrap: wrap;
             justify-content: center;
+            display: none;
+            transform: translateY(100%);
+            transition: transform 0.2s ease;
+        }
+        .mobile-toolbar.open {
+            display: flex;
+            transform: translateY(0);
+        }
+
+        .toolbar-toggle {
+            display: none;
+            position: fixed;
+            bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+            right: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 123, 255, 0.85);
+            color: #fff;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 55;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .toolbar-toggle:active { background: rgba(0, 86, 179, 0.9); }
+        .toolbar-toggle.shifted {
+            bottom: calc(90px + env(safe-area-inset-bottom, 0px));
         }
 
         .toolbar-btn {
@@ -112,7 +153,7 @@ HTML = r"""<!DOCTYPE html>
             input { font-size: 16px; padding: 12px 10px; }
             button { font-size: 16px; padding: 12px 16px; }
 
-            .mobile-toolbar { display: flex; }
+            .toolbar-toggle { display: flex; }
             .status-bar { display: flex; }
 
             #terminal-container { padding: 4px; }
@@ -148,7 +189,13 @@ HTML = r"""<!DOCTYPE html>
 
     <div id="terminal-container"></div>
 
-    <div class="mobile-toolbar" id="toolbar">
+    <button class="toolbar-toggle" id="toolbar-toggle"
+        ontouchstart="event.stopPropagation()"
+        onclick="toggleToolbar(event)" title="快捷键">⌨</button>
+
+    <div class="mobile-toolbar" id="toolbar"
+        ontouchstart="event.stopPropagation()"
+        onclick="event.stopPropagation()">
         <button class="toolbar-btn" onclick="sendKey('Ctrl+C')">Ctrl+C</button>
         <button class="toolbar-btn" onclick="sendKey('Ctrl+Z')">Ctrl+Z</button>
         <button class="toolbar-btn" onclick="sendKey('Tab')">Tab</button>
@@ -163,9 +210,25 @@ HTML = r"""<!DOCTYPE html>
     </div>
 
     <script>
+        const ACCESS_TOKEN = "ACCESS_TOKEN_PLACEHOLDER";
         let term, socket, token;
         const fitAddon = new FitAddon.FitAddon();
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? match[2] : null;
+        }
+
+        function setCookie(name, value, days) {
+            const d = new Date();
+            d.setTime(d.getTime() + days * 86400000);
+            document.cookie = name + '=' + value + ';expires=' + d.toUTCString() + ';path=/;SameSite=Strict';
+        }
+
+        function deleteCookie(name) {
+            document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';
+        }
 
         function setStatus(connected) {
             const indicator = document.getElementById('status-indicator');
@@ -182,6 +245,12 @@ HTML = r"""<!DOCTYPE html>
             el.style.display = msg ? 'block' : 'none';
         }
 
+        function showLogin() {
+            deleteCookie('rs_token');
+            token = null;
+            document.getElementById('login-interface').style.display = 'flex';
+        }
+
         function login() {
             const user = document.getElementById('user').value;
             const pass = document.getElementById('pass').value;
@@ -193,6 +262,7 @@ HTML = r"""<!DOCTYPE html>
             }).then(r => r.json()).then(data => {
                 if(data.success) {
                     token = data.token;
+                    setCookie('rs_token', token, 1);
                     document.getElementById('login-interface').style.display = 'none';
                     initShell();
                 } else {
@@ -207,6 +277,7 @@ HTML = r"""<!DOCTYPE html>
                 socket.close();
             }
             if (term) term.dispose();
+            deleteCookie('rs_token');
             token = null;
             setStatus(false);
             document.getElementById('login-interface').style.display = 'flex';
@@ -222,6 +293,18 @@ HTML = r"""<!DOCTYPE html>
                 else if (key === 'Enter') socket.send('\r');
                 else socket.send(key);
             }
+        }
+
+        function toggleToolbar(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const toolbar = document.getElementById('toolbar');
+            const toggle = document.getElementById('toolbar-toggle');
+            const isOpen = toolbar.classList.toggle('open');
+            toggle.textContent = isOpen ? '✕' : '⌨';
+            toggle.classList.toggle('shifted', isOpen);
+            // 打开工具栏时让终端失焦，避免键盘弹出
+            if (isOpen && term) term.blur();
         }
 
         function clearTerminal() {
@@ -268,7 +351,7 @@ HTML = r"""<!DOCTYPE html>
             setTimeout(() => fitAddon.fit(), 50);
 
             const dims = getTerminalDimensions();
-            const wsUrl = `ws://${window.location.hostname}:WS_PORT_PLACEHOLDER?token=${token}&cols=${dims.cols}&rows=${dims.rows}`;
+            const wsUrl = `ws://${window.location.hostname}:WS_PORT_PLACEHOLDER?token=${token}&key=${encodeURIComponent(ACCESS_TOKEN)}&cols=${dims.cols}&rows=${dims.rows}`;
             socket = new WebSocket(wsUrl);
 
             socket.onmessage = (e) => term.write(e.data);
@@ -279,7 +362,10 @@ HTML = r"""<!DOCTYPE html>
                 }
             });
 
+            let wsOpened = false;
+
             socket.onopen = () => {
+                wsOpened = true;
                 setStatus(true);
                 term.write('\x1b[1;32m[CONNECTED]\x1b[0m\r\n');
                 if (isMobile) {
@@ -289,7 +375,12 @@ HTML = r"""<!DOCTYPE html>
 
             socket.onclose = () => {
                 setStatus(false);
-                term.write('\x1b[1;31m[DISCONNECTED]\x1b[0m\r\n');
+                if (!wsOpened) {
+                    // 认证失败，退回登录页
+                    showLogin();
+                } else {
+                    term.write('\x1b[1;31m[DISCONNECTED]\x1b[0m\r\n');
+                }
             };
 
             socket.onerror = () => {
@@ -317,20 +408,60 @@ HTML = r"""<!DOCTYPE html>
                 });
             }
 
+            // 点击终端区域时关闭工具栏
+            document.getElementById('terminal-container').addEventListener('click', () => {
+                const toolbar = document.getElementById('toolbar');
+                if (toolbar.classList.contains('open')) {
+                    toolbar.classList.remove('open');
+                    document.getElementById('toolbar-toggle').textContent = '⌨';
+                    document.getElementById('toolbar-toggle').classList.remove('shifted');
+                }
+            });
+
             term.focus();
         }
+
+        // 页面加载时自动恢复会话
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedToken = getCookie('rs_token');
+            if (!savedToken) return;
+
+            fetch('/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({token: savedToken})
+            }).then(r => r.json()).then(data => {
+                if (data.valid) {
+                    token = savedToken;
+                    document.getElementById('login-interface').style.display = 'none';
+                    initShell();
+                } else {
+                    deleteCookie('rs_token');
+                }
+            }).catch(() => {});
+        });
     </script>
 </body>
 </html>"""
 
-# 在 HTML 中注入实际 WS 端口
+# 在 HTML 中注入实际 WS 端口和 Access Token
 HTML = HTML.replace("WS_PORT_PLACEHOLDER", str(WS_PORT))
+HTML = HTML.replace("ACCESS_TOKEN_PLACEHOLDER", ACCESS_TOKEN)
 
-# 关闭 Flask/Werkzeug access log
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.WARNING)
+# 不屏蔽 Werkzeug 日志，保留 reload 通知可见
+logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
+app.secret_key = SECRET_KEY
+
+
+@app.before_request
+def check_gate():
+    token = request.args.get('token')
+    if token == ACCESS_TOKEN:
+        session['gate'] = True
+    if not session.get('gate'):
+        return 'Unauthorized', 401
 
 
 @app.route('/')
@@ -371,11 +502,27 @@ def login():
         return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
 
 
+@app.route('/verify', methods=['POST'])
+def verify():
+    data = request.get_json(silent=True) or {}
+    token = data.get('token')
+    if token and token in terminals:
+        if time.time() - terminals[token] < TOKEN_EXPIRE:
+            return jsonify({'valid': True})
+    return jsonify({'valid': False}), 401
+
+
 async def ws_handler(ws):
-    query = parse_qs(urlparse(ws.path).query)
+    query = parse_qs(urlparse(ws.request.path).query)
+    key = query.get('key', [None])[0]
     token = query.get('token', [None])[0]
     cols = int(query.get('cols', [80])[0])
     rows = int(query.get('rows', [24])[0])
+
+    # 校验 access token
+    if key != ACCESS_TOKEN:
+        await ws.close()
+        return
 
     if not token or token not in terminals:
         await ws.close()
@@ -439,19 +586,20 @@ async def ws_handler(ws):
     finally:
         running = False
         proc.terminate()
-        terminals.pop(token, None)
+        # token 保留，刷新页面后自动恢复，24h 过期自动清理
 
 
-async def main():
-    async with serve(ws_handler, "0.0.0.0", WS_PORT):
-        print(f"Remote Shell Ready: http://{socket.gethostname()}:{HTTP_PORT}")
-        threading.Thread(
-            target=app.run,
-            kwargs={'host': '0.0.0.0', 'port': HTTP_PORT, 'debug': False, 'use_reloader': False},
-            daemon=True
-        ).start()
-        await asyncio.Event().wait()
+def start_ws_server():
+    async def _run():
+        async with serve(ws_handler, "0.0.0.0", WS_PORT):
+            await asyncio.Event().wait()
+    asyncio.run(_run())
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        # 子进程：启动 WebSocket（Flask 由下面的 app.run 接管）
+        print(f"Remote Shell Ready: http://{socket.gethostname()}:{HTTP_PORT}/?token={ACCESS_TOKEN}")
+        threading.Thread(target=start_ws_server, daemon=True).start()
+
+    app.run(host='0.0.0.0', port=HTTP_PORT, debug=True)
